@@ -1,0 +1,20 @@
+🎤 INTERVIEW ANSWERS (MEMORIZE THESE)
+❓ How did you prevent double booking?
+
+“I used a two-layer approach: Redis distributed locking with atomic SET NX EX to handle concurrency, and a MongoDB compound unique index as a final safety net. I validated this by running concurrent and stress tests where only one booking succeeded.”
+
+❓ Where is authentication and authorization handled?
+
+“Both authentication and RBAC are handled at the API Gateway. The gateway verifies JWTs, injects user context via headers, and blocks unauthorized requests before they reach any service.”
+
+❓ Why not handle RBAC inside services?
+
+“Centralizing RBAC in the gateway avoids duplication, keeps services focused on business logic, and provides a single security boundary — which is the standard microservices pattern.”
+
+❓ How do you handle abuse or brute-force attacks?
+
+“I implemented Redis-based rate limiting at the gateway. Login attempts are limited per IP, and booking attempts are limited per user with TTL-based counters.”
+
+❓ What happens if Redis goes down?
+
+“The system is designed to fail open for rate limiting but still remains safe for bookings because MongoDB unique constraints guarantee data correctness.”
