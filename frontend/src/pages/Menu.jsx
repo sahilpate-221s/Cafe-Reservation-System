@@ -1,145 +1,180 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchMenus } from "../store/slices/menuSlice";
 
 export default function Menu() {
+  const dispatch = useDispatch();
+  const { items: menus, categories, loading, error, lastFetched } = useSelector(state => state.menu);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+
+  useEffect(() => {
+    // Only fetch if no data or data is older than 5 minutes
+    const shouldFetch = !menus.length || !lastFetched || (Date.now() - lastFetched) > 300000;
+    if (shouldFetch) {
+      console.log('🔄 Fetching menu data from API...');
+      dispatch(fetchMenus());
+    } else {
+      console.log('📦 Using cached menu data from Redux state');
+    }
+  }, [dispatch, menus.length, lastFetched]);
+
+  const filteredMenus = selectedCategory === 'all'
+    ? menus.filter(item => item.isAvailable)
+    : menus.filter(item => item.category === selectedCategory && item.isAvailable);
+
+  const handleCategoryFilter = (category) => {
+    setSelectedCategory(category);
+  };
+
   return (
     <>
-      {/* Glow blobs for background effect */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="glow-blob w-96 h-96 top-0 left-[-100px] opacity-60 animate-pulse"></div>
-        <div className="glow-blob w-[600px] h-[600px] bottom-[-100px] right-[-200px] opacity-40"></div>
-        <div className="glow-blob w-64 h-64 top-1/3 left-2/3 opacity-30"></div>
+      {/* BACKGROUND */}
+      <div className="fixed inset-0 z-0 pointer-events-none bg-background-light dark:bg-background-dark">
+        {/* Light mode background */}
+        <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#E6DCCF] rounded-full blur-[120px] opacity-40 z-10 block dark:hidden mix-blend-multiply"></div>
+
+        {/* Grain texture */}
+        <div
+          className="absolute inset-0 z-20 opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C9286' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
+          }}
+        ></div>
       </div>
 
-      {/* Header section with navigation */}
-      <header className="fixed top-0 z-50 w-full glass-nav transition-all duration-300">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex h-20 items-center justify-between">
-            <div className="flex items-center gap-3 group cursor-pointer">
-              <div className="flex size-10 items-center justify-center rounded-full bg-primary-10 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                <span className="material-symbols-outlined">restaurant</span>
-              </div>
-              <h1 className="font-serif text-2xl font-bold tracking-tight group-hover:text-primary transition-colors">
-                Lumiere.
-              </h1>
-            </div>
-
-            <nav className="hidden md:flex items-center gap-10">
-              <a
-                className="text-sm font-medium opacity-80 hover:opacity-100 hover:text-primary transition-all"
-                href="#"
-              >
-                Home
-              </a>
-              <a
-                className="text-sm font-bold text-primary relative after:content-[''] after:absolute after:-bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary"
-                href="#"
-              >
-                Menu
-              </a>
-              <a
-                className="text-sm font-medium opacity-80 hover:opacity-100 hover:text-primary transition-all"
-                href="#"
-              >
-                About
-              </a>
-              <a
-                className="text-sm font-medium opacity-80 hover:opacity-100 hover:text-primary transition-all"
-                href="#"
-              >
-                Contact
-              </a>
-            </nav>
-
-            <div className="flex items-center gap-4">
-              <button className="hidden md:flex items-center gap-2 rounded-full bg-primary-10 px-6 py-2.5 text-sm font-bold text-primary hover:bg-primary hover:text-white transition-all duration-300 border border-primary-20">
-                Book Table
-              </button>
-
-              <button
-                className="p-2 rounded-full hover:bg-gray-200/50 dark:hover:bg-white/10 transition-colors opacity-70 hover:opacity-100"
-                onClick={() =>
-                  document.documentElement.classList.toggle("dark")
-                }
-              >
-                <span className="material-symbols-outlined dark:hidden">
-                  dark_mode
-                </span>
-                <span className="material-symbols-outlined hidden dark:block">
-                  light_mode
-                </span>
-              </button>
-
-              <button className="md:hidden p-2 hover:bg-gray-200/50 dark:hover:bg-white/10 rounded-full transition-colors opacity-70">
-                <span className="material-symbols-outlined">menu</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Main content */}
-      <main className="relative z-10 pt-24 pb-12">
+      <main className="relative z-20 min-h-screen flex flex-col pt-18">
         {/* Hero section */}
         <section className="relative px-6 py-12 md:py-20 text-center">
           <div className="mx-auto max-w-4xl relative">
-            <span className="inline-block mb-6 px-4 py-1.5 rounded-full bg-primary-10 border border-primary-20 text-xs font-bold text-primary uppercase tracking-[0.2em] backdrop-blur-md">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 dark:bg-white/10 border border-primary/20 dark:border-white/20 text-xs font-bold text-primary dark:text-white uppercase tracking-[0.2em] backdrop-blur-md">
               Seasonal Flavors
             </span>
-
-            <h2 className="mb-8 font-serif text-5xl font-medium tracking-tight md:text-7xl leading-[1.1]">
-              Curated for your <br className="hidden md:block" />
-              <span className="italic text-primary">exquisite</span> taste.
-            </h2>
-
-            <p className="mb-12 text-lg md:text-xl opacity-70 max-w-2xl mx-auto font-light leading-relaxed">
-              A culinary journey through textures and aromas. From robust
-              coffees to delicate desserts, experience our passion in every
-              bite.
-            </p>
-
-            <div className="flex flex-wrap justify-center gap-3 p-2">
-              <button className="flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-0.5 transition-all duration-300">
-                <span className="text-sm font-bold tracking-wide">
-                  All Items
-                </span>
-              </button>
-
-              <button className="flex items-center gap-2 px-6 py-3 rounded-full glass-card hover:border-primary hover:text-primary transition-all duration-300 hover:-translate-y-0.5 bg-transparent border border-gray-200 dark:border-white/10">
-                <span className="material-symbols-outlined text-[18px]">
-                  coffee
-                </span>
-                <span className="text-sm font-medium">Coffee</span>
-              </button>
-
-              <button className="flex items-center gap-2 px-6 py-3 rounded-full glass-card hover:border-primary hover:text-primary transition-all duration-300 hover:-translate-y-0.5 bg-transparent border border-gray-200 dark:border-white/10">
-                <span className="material-symbols-outlined text-[18px]">
-                  cake
-                </span>
-                <span className="text-sm font-medium">Desserts</span>
-              </button>
-
-              <button className="flex items-center gap-2 px-6 py-3 rounded-full glass-card hover:border-primary hover:text-primary transition-all duration-300 hover:-translate-y-0.5 bg-transparent border border-gray-200 dark:border-white/10">
-                <span className="material-symbols-outlined text-[18px]">
-                  cookie
-                </span>
-                <span className="text-sm font-medium">Snacks</span>
-              </button>
-
-              <button className="flex items-center gap-2 px-6 py-3 rounded-full glass-card hover:border-primary hover:text-primary transition-all duration-300 hover:-translate-y-0.5 bg-transparent border border-gray-200 dark:border-white/10">
-                <span className="material-symbols-outlined text-[18px]">
-                  restaurant_menu
-                </span>
-                <span className="text-sm font-medium">Main Course</span>
-              </button>
-            </div>
+            
           </div>
         </section>
 
-        {/* Menu grid and reservation CTA section */}
-        {/* Note: The original code had a comment about this section being long and unchanged.
-            Since the full content wasn't provided, this placeholder remains. */}
+        {/* MENU SECTION */}
+        <section className="relative px-6">
+          <div className="mx-auto max-w-7xl">
+            {/* Section Header */}
+            <div className="text-center mb-12">
+              <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-text-light dark:text-white mb-4">
+                Our <span className="text-primary italic">Menu</span>
+              </h2>
+              <p className="text-base text-text-light/70 dark:text-text-dark/60 max-w-xl mx-auto font-light">
+                Discover our carefully curated selection of premium dishes and beverages.
+              </p>
+            </div>
+
+            {/* Category Filters */}
+            <div className="flex flex-wrap justify-center gap-3 mb-8">
+              <button
+                onClick={() => handleCategoryFilter('all')}
+                className={`px-4 py-2 rounded-full transition-all duration-300 ${
+                  selectedCategory === 'all'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                    : 'glass-card hover:border-primary dark:hover:border-dark-accent text-text-light dark:text-white hover:text-primary dark:hover:text-dark-accent'
+                }`}
+              >
+                <span className="text-xs font-medium">All Items</span>
+              </button>
+              {categories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => handleCategoryFilter(category)}
+                  className={`px-4 py-2 rounded-full transition-all duration-300 ${
+                    selectedCategory === category
+                      ? 'bg-primary text-white shadow-lg shadow-primary/30'
+                      : 'glass-card hover:border-primary dark:hover:border-dark-accent text-text-light dark:text-white hover:text-primary dark:hover:text-dark-accent'
+                  }`}
+                >
+                  <span className="text-xs font-medium capitalize">{category}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Menu Grid */}
+            {loading ? (
+              <div className="flex justify-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : filteredMenus.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-text-light/70 dark:text-text-dark/60 text-lg">No items available in this category.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredMenus.map((item, index) => (
+                  <div
+                    key={item._id}
+                    className="group relative overflow-hidden rounded-2xl glass-card hover:shadow-xl hover:shadow-primary/10 dark:hover:shadow-dark-accent/10 transition-all duration-300 hover:-translate-y-1"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    {/* Image Container */}
+                    <div className="relative h-48 overflow-hidden">
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                          <span className="text-4xl text-primary/40">{item.name.charAt(0)}</span>
+                        </div>
+                      )}
+
+                      {/* Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+
+                      {/* Price Badge */}
+                      <div className="absolute top-3 right-3 bg-white/90 dark:bg-black/90 backdrop-blur-md px-2 py-1 rounded-full">
+                        <span className="text-xs font-bold text-text-light dark:text-white">${item.price}</span>
+                      </div>
+
+                      {/* Veg/Non-Veg Indicator */}
+                      <div className="absolute top-3 left-3">
+                        <div className={`w-2.5 h-2.5 rounded-full ${item.isVeg ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-serif text-lg font-medium text-text-light dark:text-white group-hover:text-primary transition-colors line-clamp-1">
+                          {item.name}
+                        </h3>
+                      </div>
+
+                      <p className="text-text-light/70 dark:text-text-dark/60 text-xs leading-relaxed mb-3 line-clamp-2">
+                        {item.description}
+                      </p>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium uppercase tracking-wide text-primary">
+                          {item.category}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-text-light/50 dark:text-text-dark/50">
+                            {item.isVeg ? 'Veg' : 'Non-Veg'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hover Effect Border */}
+                    <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-primary/30 transition-colors duration-200 pointer-events-none"></div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* RESERVATION SECTION */}
-        <section className="relative px-6 pb-20">
+        <section className="relative px-6 pb-20 mt-10">
           <div className="mx-auto max-w-6xl overflow-hidden rounded-[3rem] relative group border border-gray-200 dark:border-white/5 shadow-2xl">
             {/* Background */}
             <div className="absolute inset-0 bg-black">
@@ -182,55 +217,57 @@ export default function Menu() {
         </section>
       </main>
 
-      {/* Footer section */}
-      <footer className="border-t border-gray-200 dark:border-white/5 bg-white/50 dark:bg-black/30 backdrop-blur-sm pt-16 pb-12 px-6">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-10 mb-12">
-            <div className="flex flex-col items-center md:items-start gap-4">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-primary-10 text-primary">
-                  <span className="material-symbols-outlined text-2xl">
-                    restaurant
-                  </span>
-                </div>
-                <span className="font-serif text-2xl font-bold">Lumiere.</span>
-              </div>
-              <p className="text-sm opacity-60 max-w-xs text-center md:text-left leading-relaxed">
-                A sanctuary for coffee lovers and food enthusiasts. Experience
-                the art of dining.
+      {/* ================= FOOTER ================= */}
+      <footer className="bg-primary/95 dark:bg-[#0d0d0d] text-white pt-24 pb-12 px-6 md:px-12 border-t border-white/5 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+        <div className="max-w-7xl mx-auto flex flex-col gap-16 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            <div className="flex flex-col gap-6">
+              <h2 className="text-2xl font-display font-bold">Lumiere.</h2>
+              <p className="text-white/80 text-sm leading-relaxed font-light">
+                Crafting memorable experiences through exceptional coffee,
+                artisanal food, and a warm atmosphere since 2015.
               </p>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-8 text-sm font-bold tracking-wide opacity-80">
-              <a className="hover:text-primary transition-colors" href="#">
-                Home
-              </a>
-              <a className="hover:text-primary transition-colors" href="#">
-                Menu
-              </a>
-              <a className="hover:text-primary transition-colors" href="#">
-                Our Story
-              </a>
-              <a className="hover:text-primary transition-colors" href="#">
-                Locations
-              </a>
-              <a className="hover:text-primary transition-colors" href="#">
-                Careers
-              </a>
+            <div>
+              <h3 className="font-display font-bold text-xl mb-4">Explore</h3>
+              <ul className="space-y-3 text-white/80 text-sm">
+                <li>Our Story</li>
+                <li>Full Menu</li>
+                <li>Private Events</li>
+                <li>Gift Cards</li>
+              </ul>
             </div>
 
-            <div className="flex gap-4">{/* SVG icons unchanged */}</div>
+            <div>
+              <h3 className="font-display font-bold text-xl mb-4">Visit Us</h3>
+              <p className="text-white/80 text-sm leading-relaxed">
+                123 Coffee Street <br />
+                Brewtown, BT 90210
+              </p>
+            </div>
+
+            <div>
+              <h3 className="font-display font-bold text-xl mb-4">
+                Opening Hours
+              </h3>
+              <p className="text-white/80 text-sm">
+                Mon – Fri: 7am – 9pm <br />
+                Sat: 8am – 10pm <br />
+                Sun: 8am – 8pm
+              </p>
+            </div>
           </div>
 
-          <div className="border-t border-gray-200 dark:border-white/5 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs opacity-50">
-            <p>© 2024 Lumiere Cafe. All rights reserved.</p>
-            <div className="flex gap-6">
-              <a className="hover:text-primary transition-colors" href="#">
-                Privacy Policy
-              </a>
-              <a className="hover:text-primary transition-colors" href="#">
-                Terms of Service
-              </a>
+          <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p className="text-white/50 text-sm">
+              © 2024 Lumiere Cafe. All rights reserved.
+            </p>
+            <div className="flex gap-8 text-white/50 text-sm">
+              <span>Privacy Policy</span>
+              <span>Terms of Service</span>
             </div>
           </div>
         </div>

@@ -1,356 +1,378 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import {
+  FaArrowRight,
+  FaUtensils,
+  FaChair,
+  FaLeaf,
+  FaCoffee,
+  FaHeart,
+} from "react-icons/fa";
 
 const Home = () => {
   return (
-    <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-body overflow-x-hidden antialiased transition-colors duration-300">
-      {/* ================= NAVBAR ================= */}
-      <nav className="fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 glass-nav">
-        <div className="relative flex justify-center w-full">
-          <div className="px-6 md:px-12 py-4 w-full max-w-7xl">
-            <div className="flex items-center justify-between">
-              {/* Logo */}
-              <div className="flex items-center gap-3 cursor-pointer group">
-                <div className="text-primary dark:text-dark-accent transition-transform duration-500 group-hover:rotate-12 group-hover:scale-110">
-                  <span className="material-symbols-outlined text-[32px]">
-                    local_cafe
-                  </span>
-                </div>
-                <h2 className="text-2xl font-display font-bold tracking-wide text-text-light dark:text-white group-hover:text-primary dark:group-hover:text-dark-accent transition-colors">
-                  CafeName
-                </h2>
-              </div>
-
-              {/* Desktop Links */}
-              <div className="hidden md:flex items-center gap-10">
-                {["Menu", "About", "Reservations"].map((item) => (
-                  <a
-                    key={item}
-                    href="#"
-                    className="text-sm font-medium uppercase tracking-widest text-text-light/80 dark:text-text-dark/80 hover:text-primary dark:hover:text-dark-accent transition-colors relative group"
-                  >
-                    {item}
-                    <span className="absolute -bottom-1 left-1/2 w-0 h-px bg-primary dark:bg-dark-accent transition-all duration-300 group-hover:w-full group-hover:left-0" />
-                  </a>
-                ))}
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-4">
-                <div className="hidden md:flex items-center gap-4">
-                  <a
-                    href="#"
-                    className="text-sm font-semibold hover:text-primary dark:hover:text-dark-accent transition-colors"
-                  >
-                    Login
-                  </a>
-                  <a
-                    href="#"
-                    className="text-sm font-semibold px-5 py-2 rounded-full bg-primary text-white dark:bg-dark-accent dark:text-black hover:bg-primary-hover dark:hover:bg-teal-400 transition-all shadow-lg shadow-primary/20 dark:shadow-dark-accent/20"
-                  >
-                    Sign Up
-                  </a>
-                </div>
-
-                {/* Theme Toggle */}
-                <button
-                  aria-label="Toggle Theme"
-                  className="flex items-center justify-center size-10 rounded-full bg-stone-200/50 dark:bg-white/5 border border-stone-300/20 dark:border-white/10 hover:bg-primary/10 dark:hover:bg-dark-accent/10 text-text-light dark:text-white transition-all transform hover:rotate-12"
-                  onClick={() =>
-                    document.documentElement.classList.toggle("dark")
-                  }
-                >
-                  <span className="material-symbols-outlined text-[20px]">
-                    light_mode
-                  </span>
-                </button>
-
-                {/* Mobile Menu */}
-                <button className="md:hidden flex items-center justify-center size-10 rounded-full bg-stone-200/50 dark:bg-white/5 border border-stone-300/20 dark:border-white/10 hover:bg-primary/10 dark:hover:bg-dark-accent/10 text-text-light dark:text-white transition-all">
-                  <span className="material-symbols-outlined">menu</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-body overflow-x-hidden antialiased transition-colors duration-300 ">
       {/* ================= HERO ================= */}
-      <header className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <header className="relative w-full min-h-screen flex items-center justify-center pt-30 overflow-hidden">
         {/* Background layers */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-stone-900/40 via-transparent to-background-light dark:to-background-dark z-10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-stone-900/50 via-stone-800/10 to-stone-900/30 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background-dark/80 via-background-dark/40 to-transparent z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-background-light dark:from-background-dark via-transparent to-transparent z-10"></div>
           <div
-            className="w-full h-full bg-cover bg-center bg-no-repeat scale-105 animate-[kenburns_25s_infinite_alternate]"
+            className="w-full h-full bg-cover bg-center bg-no-repeat scale-105 animate-[float_20s_ease-in-out_infinite_alternate]"
             style={{
               backgroundImage:
-                'url("https://lh3.googleusercontent.com/aida-public/AB6AXuChlWdc-vfj1kvnqHitfJF4oNiH4Qcy8A2EXBLzn7MWN7flLdiCKFRrVPHDfg_lVAr-F-ltPFWYKCSc5BjVD-xVO3PAAR88SPNOjgw5vNqw4DVZDXkT3GLYCbKkJ2dv48_TO5G41a9IRXEl13G_KlCBiAmowRx0DLS6bSVhE0-JwZcBaj943dHC9Mw4KMRatKzenLwVn5moro0_vmleJlpFLJ0mzBRHwpvw5sQsLsIWPJSn0mHOZDfieEEgiDlzua_Q8XFQ3cUrTC0")',
+                'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD6jYoOKqAgepRH0SgC5UJFqMDr2UcsSxEJoznRpRqjjYLfSNULCvlrSQNgKHH7rfoTf7HMlnTIZ7_FvyAf7P7v-VjF8QHFhT5FfBSJcwrIdIj8yb_xF6TG7a-Wl_EPDVLfbexozq1db-srY-907I9Xz401wfsVtaCfKVyxL8-btgRgK5W6BXc_jQ4JqWD1YRGzWuHcGDEGvLADwtt2oqc5SLvDrqsGez87eIXWP2WO5XTV7JWiePbcM1AxLODctqyWToXIQcH52p4")',
             }}
           />
         </div>
 
         {/* Content */}
-        <div className="relative z-20 container mx-auto px-6 md:px-12 flex flex-col items-center justify-center text-center mt-16">
-          <div className="glass-panel p-10 md:p-20 rounded-4xl max-w-5xl w-full flex flex-col items-center border-t border-l border-white/30 shadow-2xl backdrop-blur-md">
-            <span className="inline-block px-5 py-2 mb-8 text-xs font-bold tracking-[0.25em] text-white uppercase bg-stone-900/20 dark:bg-white/10 rounded-full border border-white/20 backdrop-blur-md shadow-sm">
-              Est. 2015 • Premium Roasters
-            </span>
+        <div className="relative z-20 container mx-auto px-4 flex flex-col items-start justify-center h-full max-w-7xl pb-24">
+          <div className="max-w-4xl space-y-8 animate-fade-in-up">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border border-white/20 shadow-lg backdrop-blur-md">
+              <span className="flex h-2 w-2 rounded-full bg-primary dark:bg-accent-teal animate-pulse"></span>
+              <span className="text-gray-900 dark:text-white text-xs font-bold uppercase tracking-widest">
+                Now Open for Reservations
+              </span>
+            </div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-medium leading-[1.05] mb-8 drop-shadow-sm dark:drop-shadow-lg">
-              Where great coffee meets{" "}
-              <span className="italic text-primary dark:text-dark-accent font-serif">
-                great moments
+            <h1 className="text-6xl md:text-8xl lg:text-9xl font-serif font-medium text-white leading-[1] drop-shadow-2xl">
+              Where coffee <br />
+              <span className="italic text-primary dark:text-silver/90">
+                meets soul.
               </span>
             </h1>
 
-            <p className="text-lg md:text-2xl text-text-light/90 dark:text-white/80 font-light leading-relaxed mb-12 max-w-3xl drop-shadow-sm">
-              Experience artisanal blends and gourmet pastries in a sanctuary
-              designed for you to pause, sip, and savor the finer things.
+            <p className="text-gray-200 text-lg md:text-xl leading-relaxed max-w-lg font-light tracking-wide border-l-2 border-primary dark:border-accent-teal pl-6">
+              Artisanal roasts, chef-crafted pastries, and an atmosphere curated
+              for your perfect moment.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-6 w-full sm:w-auto">
-              <button className="flex items-center justify-center gap-3 h-14 px-8 rounded-full bg-primary text-white dark:bg-dark-accent dark:text-black font-bold text-lg hover:bg-primary-hover dark:hover:bg-teal-400 hover:scale-105 transition-all shadow-xl shadow-primary/30 dark:shadow-dark-accent/30">
-                <span className="material-symbols-outlined text-[22px]">
-                  table_restaurant
+            <div className="flex flex-col sm:flex-row gap-5 pt-6">
+              <button className="group relative h-14 px-10 overflow-hidden rounded-full bg-primary dark:bg-accent-teal text-white shadow-xl hover:shadow-primary/40 dark:hover:shadow-accent-teal/40 transition-all hover:-translate-y-1">
+                <span className="relative flex items-center gap-3 font-bold tracking-wide z-10">
+                  Reserve a Table
+                  <FaArrowRight className="text-lg group-hover:translate-x-1 transition-transform" />
                 </span>
-                Reserve a Table
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
               </button>
 
-              <button className="flex items-center justify-center gap-3 h-14 px-8 rounded-full bg-white/40 dark:bg-white/10 text-text-light dark:text-white border border-white/50 dark:border-white/30 backdrop-blur-md font-bold text-lg hover:bg-white/60 dark:hover:bg-white/20 transition-all shadow-lg group">
-                <span>Explore Menu</span>
-                <span className="material-symbols-outlined text-[22px] group-hover:translate-x-1 transition-transform">
-                  arrow_forward
-                </span>
+              <button className="h-14 px-10 rounded-full glass-panel border border-white/30 text-white font-bold hover:bg-white/10 transition-all flex items-center gap-3 group backdrop-blur-md">
+                Explore Menu
+                <FaUtensils className="text-lg group-hover:rotate-12 transition-transform" />
               </button>
             </div>
           </div>
-        </div>
+          {/* Feature cards */}
+          <div className="mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-12 justify-items-center">
+              <div className="glass-panel p-6 rounded-2xl border border-white/20 shadow-2xl hover:-translate-y-2 transition-transform duration-300 group">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="p-2.5 bg-primary/20 dark:bg-accent-teal/20 rounded-xl text-primary dark:text-accent-teal-light group-hover:bg-primary group-hover:text-white dark:group-hover:bg-accent-teal dark:group-hover:text-white transition-colors">
+                    <FaChair />
+                  </div>
+                  <h3 className="font-serif font-bold text-gray-900 dark:text-white">
+                    Cozy Ambience
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-700 dark:text-white font-medium">
+                  Warm, inviting spaces for comfort.
+                </p>
+              </div>
 
-        {/* Scroll indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 animate-bounce text-primary/80 dark:text-white/50">
-          <span className="material-symbols-outlined text-[32px]">
-            keyboard_arrow_down
-          </span>
+              <div className="glass-panel p-6 rounded-2xl border border-white/20 shadow-2xl hover:-translate-y-2 transition-transform duration-300 delay-75 group">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="p-2.5 bg-primary/20 dark:bg-accent-teal/20 rounded-xl text-primary dark:text-accent-teal-light group-hover:bg-primary group-hover:text-white dark:group-hover:bg-accent-teal dark:group-hover:text-white transition-colors">
+                    <FaLeaf />
+                  </div>
+                  <h3 className="font-serif font-bold text-gray-900 dark:text-white">
+                    Premium Organic
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-700 dark:text-white font-medium">
+                  Finest beans and local produce.
+                </p>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl border border-white/20 shadow-2xl hover:-translate-y-2 transition-transform duration-300 delay-100 group">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="p-2.5 bg-primary/20 dark:bg-accent-teal/20 rounded-xl text-primary dark:text-accent-teal-light group-hover:bg-primary group-hover:text-white dark:group-hover:bg-accent-teal dark:group-hover:text-white transition-colors">
+                    <FaCoffee />
+                  </div>
+                  <h3 className="font-serif font-bold text-gray-900 dark:text-white">
+                    Master Baristas
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-700 dark:text-white font-medium">
+                  Crafting every cup with passion.
+                </p>
+              </div>
+
+              <div className="glass-panel p-6 rounded-2xl border border-white/20 shadow-2xl hover:-translate-y-2 transition-transform duration-300 delay-150 group">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="p-2.5 bg-primary/20 dark:bg-accent-teal/20 rounded-xl text-primary dark:text-accent-teal-light group-hover:bg-primary group-hover:text-white dark:group-hover:bg-accent-teal dark:group-hover:text-white transition-colors">
+                    <FaHeart />
+                  </div>
+                  <h3 className="font-serif font-bold text-gray-900 dark:text-white">
+                    Intimate &amp; Calm
+                  </h3>
+                </div>
+                <p className="text-xs text-gray-700 dark:text-white font-medium">
+                  Perfect for dates and quiet work.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* ================= OUR PROMISE ================= */}
-      <section className="relative py-32 px-6 md:px-12 bg-background-light dark:bg-background-dark overflow-hidden">
-        {/* background blobs */}
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/10 dark:bg-dark-accent/5 blur-[150px] rounded-full translate-x-1/3 -translate-y-1/4" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-secondary/30 dark:bg-dark-highlight/5 blur-[120px] rounded-full -translate-x-1/3 translate-y-1/3" />
+      {/* ================= our signature blend================= */}
 
-        <div className="max-w-7xl mx-auto flex flex-col gap-20 relative z-10">
-          {/* heading */}
-          <div className="flex flex-col gap-5 text-center items-center">
-            <span className="text-primary dark:text-dark-accent font-bold tracking-[0.2em] text-xs uppercase">
-              Our Promise
-            </span>
+      <section className="relative py-32 px-4 md:px-8 overflow-hidden">
+        <div className="absolute right-0 top-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px] -z-10"></div>
 
-            <h2 className="text-4xl md:text-5xl font-display font-medium">
-              Why We Are Different
-            </h2>
-
-            <div className="w-16 h-1 bg-gradient-to-r from-transparent via-primary dark:via-dark-accent to-transparent rounded-full my-2" />
-
-            <p className="text-text-light/70 dark:text-text-dark/60 text-lg max-w-2xl font-light">
-              Discover the elements that make every visit a memorable experience
-              of taste and comfort.
-            </p>
-          </div>
-
-          {/* cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              [
-                "chair",
-                "Cozy Ambience",
-                "Relax in our thoughtfully designed space with warm lighting and plush seating.",
-              ],
-              [
-                "spa",
-                "Premium Ingredients",
-                "Sourced from the best local farms to ensure freshness in every single bite.",
-              ],
-              [
-                "restaurant_menu",
-                "Expert Chefs",
-                "Signature dishes crafted by culinary masters with a true passion for flavor.",
-              ],
-              [
-                "volunteer_activism",
-                "Perfect for Dates",
-                "The ideal intimate setting for business meetings and romantic evenings.",
-              ],
-            ].map(([icon, title, desc]) => (
-              <div
-                key={title}
-                className="glass-card flex flex-col items-center text-center p-8 gap-6 rounded-3xl"
-              >
-                <div className="size-20 rounded-full bg-white dark:bg-white/5 flex items-center justify-center text-primary dark:text-dark-accent shadow-md">
-                  <span className="material-symbols-outlined text-[32px]">
-                    {icon}
-                  </span>
-                </div>
-                <h3 className="text-xl font-display font-semibold">{title}</h3>
-                <p className="text-sm text-text-light/60 dark:text-text-dark/60 font-light leading-relaxed">
-                  {desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ================= MENU SECTION ================= */}
-      <section className="py-24 px-6 md:px-12 bg-surface-light dark:bg-surface-dark">
-        <div className="max-w-7xl mx-auto flex flex-col gap-14">
-          {/* header row */}
-          <div className="flex flex-col md:flex-row justify-between items-end border-b border-primary/10 dark:border-white/5 pb-8 gap-6">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-4">
             <div>
-              <span className="text-primary dark:text-dark-accent font-bold tracking-[0.2em] text-xs uppercase mb-3 block">
-                Our Menu
+              <span className="text-primary font-bold tracking-[0.2em] uppercase text-xs mb-3 block">
+                Taste the Magic
               </span>
-              <h2 className="text-4xl md:text-5xl font-display font-medium mb-3">
-                Our Favorites
+              <h2 className="text-4xl md:text-5xl font-serif font-medium text-gray-900 dark:text-white">
+                Our Signature Blends
               </h2>
-              <p className="text-text-light/60 dark:text-text-dark/60 font-light text-lg">
-                Hand-picked selections you simply can’t miss.
-              </p>
             </div>
 
-            <a className="hidden sm:flex items-center gap-3 px-6 py-2.5 rounded-full border border-primary/20 dark:border-dark-accent/20 text-primary dark:text-dark-accent font-bold hover:bg-primary hover:text-white dark:hover:bg-dark-accent dark:hover:text-black transition-all">
+            <Link
+              to="/menu"
+              className="hidden md:inline-flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-full text-sm font-bold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/10 transition-all group"
+            >
               View Full Menu
-              <span className="material-symbols-outlined text-sm">
+              <span className="material-symbols-outlined ml-2 text-lg group-hover:translate-x-1 transition-transform">
                 arrow_forward
               </span>
-            </a>
+            </Link>
           </div>
 
-          {/* cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {[
-              {
-                title: "Caramel Macchiato",
-                price: "$5.50",
-                image:
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuAYWC7AE-nXXIGYiEOPqulo9IQ_gU-ksiZcx5vq-aOkYbhPMp4dI5RfzswMFyqoPtVr6AxfnIkTMALLIYic7084-C70pm7lQs94WK06ywgMoGC2rs0RXNUY8TedTBLlM92e-R3DL_bu9HqauGns_xPqsOj1I8Bth2R0Ke3L2WuteE7R4pU69h34DiAnTPl87LQtNJ9TkzAmwY5kD6c2kUsBPgRsicF2dTYzfUiQHZIdGK1YtaB5KYM6jJuMHrW-VwDwnBpGrmO0Q7k",
-              },
-              {
-                title: "Avocado Toast",
-                price: "$12.00",
-                image:
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuBNT6aDv58C6S-uYVEKDKsTkqKsBaZHsJfluoM3Q91yPByxB2rus_X652BpL2GW1rCG0RSajcVszdu5kv7LKt19Md8C-ZIjXarOGBkj5LiHtbmmTXQ1QMMdxQ1ts3prmndRPQ0gcL3-7ElpT0JdrLQ7MU4T6ox1W3oBwTF0dNoa7YEO7jYHzUt-9hwcNZ7tPRAczpPDCvyoKbuuIZFd3lAq1RrUMQI5llnOq0oYOpzE9CaiBB4pu91iKtQ_WD5oHG1eBeSV638EEvE",
-              },
-              {
-                title: "Classic Tiramisu",
-                price: "$8.00",
-                image:
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuBVENcAt5Va0NWXsoGyTyN4QO0euTWESRYDoGu6ziqs0FtjwLc7u_wFPfvi7eKN9ymZYrbyF5dsH7OaRCEk7J6B9IPs3mnsFQONO8KLcml9xwgH0UcnB2tgdWIKJUvIZ_tfBv0NFGGu6GuZcSG7l8rjN6kcFPFGAaFn5P5pTg-qsC1HjbKuhM_ZKwAF-lIwnIOKYGR8-g6dEPgfR-5pd6rSkcOlD_64F7ivvcxuXNX9roxv-s25O47SNWdnGz29HUKZy0Wt4JqOYCE",
-              },
-            ].map(({ title, price, image }) => (
-              <div
-                key={title}
-                className="group relative rounded-[2rem] overflow-hidden glass-card flex flex-col h-full border-none shadow-soft hover:shadow-warm bg-white dark:bg-[#252525]"
-              >
-                {/* Image */}
-                <div className="relative w-full aspect-[4/3] overflow-hidden">
-                  <div
-                    className="w-full h-full bg-cover bg-center transition-transform duration-1000 ease-out group-hover:scale-110"
-                    style={{ backgroundImage: `url(${image})` }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
-                  <div className="absolute bottom-5 right-5 bg-white/95 dark:bg-background-dark/90 backdrop-blur-md px-4 py-1.5 rounded-full text-sm font-bold shadow-lg border border-white/20">
-                    {price}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-8 flex flex-col gap-4 flex-1 bg-white/40 dark:bg-white/5 backdrop-blur-sm">
-                  <h3 className="text-2xl font-display font-bold">{title}</h3>
-
-                  <p className="text-text-light/70 dark:text-text-dark/60 text-sm font-light leading-relaxed">
-                    Rich flavors crafted with premium ingredients and perfect
-                    balance.
-                  </p>
-
-                  <div className="mt-auto pt-6 border-t border-primary/10 dark:border-white/5">
-                    <button className="w-full py-3.5 rounded-xl bg-surface-light dark:bg-white/5 font-semibold hover:bg-primary hover:text-white dark:hover:bg-dark-accent dark:hover:text-black transition-all flex items-center justify-center gap-2 text-sm">
-                      <span className="material-symbols-outlined text-lg">
-                        add_shopping_cart
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Card 1 */}
+            <div className="group relative">
+              <div className="relative w-full aspect-[4/5] overflow-hidden rounded-[2rem] shadow-xl">
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors z-10"></div>
+                <div
+                  className="w-full h-full bg-center bg-no-repeat bg-cover transition-transform duration-700 group-hover:scale-110"
+                  style={{
+                    backgroundImage:
+                      'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCOypVHBOOOus0me6wlwpG1hJhY8gIC1tj_WBHYKhWkRJEa1IEumMxECQk7TCBlCOXw4dcx_SYpLHylHnba8DDK8LQGPEz22y5cFmhGiFwooyr12GEMpa7fB7xbRQrAkGViCYtSt8vWEhWfT-xsyZNdvw_gZaV3jh0kDQWRN04PEdE7nG2N_8_dsEh0jWxv0NfCcVQ_ck-N6Lof6HOJws-amU-3m5KJX40QkWtHlSmEp0MDdqXFCCgtJSPVzW1QnETvowm41S48xRk")',
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 w-full p-6 z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                  <div className="glass-panel p-4 rounded-xl border border-white/10 bg-white/10 backdrop-blur-md">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="text-white text-lg font-serif font-bold">
+                        Caramel Macchiato
+                      </h3>
+                      <span className="text-primary-dark dark:text-primary font-bold bg-white dark:bg-black/50 px-2 py-1 rounded text-xs">
+                        $5.50
                       </span>
-                      Add to Order
-                    </button>
+                    </div>
+                    <p className="text-gray-200 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">
+                      Rich espresso with vanilla and caramel drizzle.
+                    </p>
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Card 2 */}
+            <div className="group relative mt-0 lg:mt-12">
+              <div className="relative w-full aspect-[4/5] overflow-hidden rounded-[2rem] shadow-xl">
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors z-10"></div>
+                <div
+                  className="w-full h-full bg-center bg-no-repeat bg-cover transition-transform duration-700 group-hover:scale-110"
+                  style={{
+                    backgroundImage:
+                      'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCi7IUpR7rXpks2xcQEMlCITkKASwMt1rDfMCQkriiIVK4iTEp3f1u-M0LMzNi_RXw9aAmh8cJMWiaEoX7f8Fu9WLsOoZOizN4dMg5NOAler59gBu7Pnbkd10jWTgroSym-a-xMZ16Dy3n7RbVckRnO1J1YNg-aA2VWljEckzuPfdHwVx1s21rR1BYEnM4sTwT3I4nZY63GLDVU_ZH_FfbQR6TcpHg4aYhOyFKfrA4e9HQTY5uLMOY9IoiD09SB3T8GALl2aI1xgWA")',
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 w-full p-6 z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                  <div className="glass-panel p-4 rounded-xl border border-white/10 bg-white/10 backdrop-blur-md">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="text-white text-lg font-serif font-bold">
+                        Avocado Toast
+                      </h3>
+                      <span className="text-primary-dark dark:text-primary font-bold bg-white dark:bg-black/50 px-2 py-1 rounded text-xs">
+                        $8.00
+                      </span>
+                    </div>
+                    <p className="text-gray-200 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">
+                      Sourdough bread topped with fresh avocado &amp; seeds.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3 */}
+            <div className="group relative">
+              <div className="relative w-full aspect-[4/5] overflow-hidden rounded-[2rem] shadow-xl">
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors z-10"></div>
+                <div
+                  className="w-full h-full bg-center bg-no-repeat bg-cover transition-transform duration-700 group-hover:scale-110"
+                  style={{
+                    backgroundImage:
+                      'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD46P_yyQb5iY5o1dNuosviaxoOKWRsboOhS1XXh1HRK0z7e1dGjnA7_IlLg4y3T43-UKhRyL-aKL96BIO7tJsgufgHS_z8Cd-lngkkICYYM7YtVPYUNbG1DzZGaHo-rwuHW8VCauIXeMiKo9Q7jLRz_FvqDe3f_njdkE-y1c87top5qo17fl7BxHrVpv2YeXjlwJ4YuEtNCC_N4Rc-TZGQSyt_Toh-uhG_2vF-23f-3jVJJPQzkO11qjPh_cClkPT9OGC74bt6Zdk")',
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 w-full p-6 z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                  <div className="glass-panel p-4 rounded-xl border border-white/10 bg-white/10 backdrop-blur-md">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="text-white text-lg font-serif font-bold">
+                        Berry Smoothie
+                      </h3>
+                      <span className="text-primary-dark dark:text-primary font-bold bg-white dark:bg-black/50 px-2 py-1 rounded text-xs">
+                        $6.50
+                      </span>
+                    </div>
+                    <p className="text-gray-200 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">
+                      Fresh blend of strawberries, blueberries and yogurt.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4 */}
+            <div className="group relative mt-0 lg:mt-12">
+              <div className="relative w-full aspect-[4/5] overflow-hidden rounded-[2rem] shadow-xl">
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors z-10"></div>
+                <div
+                  className="w-full h-full bg-center bg-no-repeat bg-cover transition-transform duration-700 group-hover:scale-110"
+                  style={{
+                    backgroundImage:
+                      'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAzm6sUbLKAhIIx3gQe15wiNUF8vnayVQA3fSZcsipQhzdiZyk0M4G7dCxf93YSZHc248vpGgwf--3nQ0lpF5Y_wXxLPs5dyb0eTnua_l4dJQq0ZnXLROCyWs225wj69KTDQUxQFxGRnsebCTAZwaCIqDuwl4Q0jE4-nsxiCSo29yLggQ1dyvALa2p1ckMBzjqvdc6pnH6V6reWN4IcELPOVQZhZiQUd6wSZW79GN6BE7ilDp-WEscN0mNsIIW22UO0nez1onjmAPc")',
+                  }}
+                />
+                <div className="absolute bottom-0 left-0 w-full p-6 z-20 translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                  <div className="glass-panel p-4 rounded-xl border border-white/10 bg-white/10 backdrop-blur-md">
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className="text-white text-lg font-serif font-bold">
+                        Butter Croissant
+                      </h3>
+                      <span className="text-primary-dark dark:text-primary font-bold bg-white dark:bg-black/50 px-2 py-1 rounded text-xs">
+                        $3.50
+                      </span>
+                    </div>
+                    <p className="text-gray-200 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100 line-clamp-2">
+                      Buttery, flaky, and freshly baked daily by our chefs.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* mobile CTA */}
-          <div className="sm:hidden flex justify-center">
-            <a className="flex items-center gap-3 px-8 py-4 rounded-full bg-primary text-white font-bold w-full justify-center">
+          <div className="mt-10 md:hidden flex justify-center">
+            <Link
+              to="/menu"
+              className="w-full py-4 rounded-full border border-gray-300 dark:border-gray-700 text-sm font-bold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5 transition-colors flex items-center justify-center"
+            >
               View Full Menu
-              <span className="material-symbols-outlined text-sm">
-                arrow_forward
-              </span>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* ================= RESERVATION CTA ================= */}
-      <section className="relative py-32 px-6 md:px-12 overflow-hidden">
-        {/* Background layers */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-primary/40 dark:bg-background-dark z-10 mix-blend-multiply" />
-          <div className="absolute inset-0 bg-gradient-to-r from-stone-900/80 to-transparent z-10" />
-          <div
-            className="w-full h-full bg-cover bg-center bg-no-repeat bg-fixed blur-[3px]"
-            style={{
-              backgroundImage:
-                'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWuEBNsDgZdwDCNuXCzWxD1ZWIdxohL4TIlk6twvT71t-9UZCp06b7XMqdSW_Hai_XTwKp77eW-BOhQPgsxd3SCaJgmxRh_wURs5Wiq4TUOGLUPoreQp9EIsncGg2R61uElJM48kYeCsqTOVrWqGLY91gocISY0x151IwiW2j8N0T1Syy_mCagGsBfoYBcUj99QCqVXsfuJKjgDOlPJ3pcF78BNKwG1-EfLygBhrniZjGONfuCCoTEdp9txoVqUm9H3XX9LiuB4BE")',
-            }}
-          />
-        </div>
+      <section className="py-20 px-4 md:px-8 relative">
+        <div className="container mx-auto max-w-7xl">
+          <div className="relative rounded-[2.5rem] overflow-hidden bg-surface-dark shadow-2xl min-h-[500px] grid grid-cols-1 md:grid-cols-2">
+            {/* LEFT CONTENT */}
+            <div className="relative z-10 p-8 md:p-16 flex flex-col justify-center bg-gradient-to-r from-background-dark via-background-dark/95 to-background-dark/80">
+              <div className="mb-6 flex items-center gap-3">
+                <span className="w-10 h-[1px] bg-primary"></span>
+                <span className="text-primary uppercase tracking-widest text-xs font-bold">
+                  Book a Table
+                </span>
+              </div>
 
-        {/* Content */}
-        <div className="relative z-20 max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-16">
-          <div className="flex-1 text-center lg:text-left">
-            <span className="text-white/80 font-bold tracking-[0.2em] uppercase text-xs mb-4 block">
-              Book Your Spot
-            </span>
-            <h2 className="text-4xl md:text-5xl lg:text-7xl font-display font-medium text-white leading-tight mb-6">
-              Planning a <br />
-              <span className="italic text-dark-accent">special visit?</span>
-            </h2>
-            <p className="text-white/80 text-xl font-light max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              Whether it&apos;s a quick coffee catch-up or a long dinner, ensure
-              your favorite seat is waiting for you.
-            </p>
-          </div>
+              <h2 className="text-4xl md:text-5xl font-serif font-medium text-white mb-6 leading-tight">
+                Secure the best spot for your{" "}
+                <span className="text-primary italic">evening</span>
+              </h2>
 
-          <div className="flex-1 w-full max-w-md">
-            <div className="glass-panel p-10 rounded-3xl bg-white/30 dark:bg-black/50 border border-white/40 flex flex-col gap-6 shadow-2xl backdrop-blur-xl">
-              <h3 className="text-2xl font-display text-white text-center">
-                Reserve a Table
-              </h3>
+              <p className="text-gray-400 text-base mb-10 max-w-md font-light leading-relaxed">
+                Avoid the wait. Whether it's a romantic dinner or a business
+                meeting, we have the perfect table for you.
+              </p>
 
-              <select className="w-full h-14 rounded-xl bg-white/20 dark:bg-white/5 border border-white/30 text-white px-4">
-                <option className="text-black">2 Guests</option>
-                <option className="text-black">3 Guests</option>
-                <option className="text-black">4 Guests</option>
-                <option className="text-black">5+ Guests</option>
-              </select>
+              <form className="flex flex-col gap-5 w-full">
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="group relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">
+                      calendar_today
+                    </span>
+                    <input
+                      type="date"
+                      placeholder="Date"
+                      className="w-full h-14 pl-12 pr-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all hover:bg-white/10"
+                      style={{ color: 'white' }}
+                    />
+                  </div>
 
-              <input
-                type="date"
-                className="w-full h-14 rounded-xl bg-white/20 dark:bg-white/5 border border-white/30 text-white px-4"
+                  <div className="group relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">
+                      schedule
+                    </span>
+                    <input
+                      type="time"
+                      placeholder="Time"
+                      className="w-full h-14 pl-12 pr-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all hover:bg-white/10"
+                      style={{ color: 'white' }}
+                    />
+                  </div>
+                </div>
+
+                <div className="group relative">
+                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">
+                    group
+                  </span>
+
+                  <input
+                    type="text"
+                    placeholder="Number of Guests"
+                    className="w-full h-14 pl-12 pr-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all hover:bg-white/10"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  className="mt-4 h-14 bg-primary hover:bg-primary-dark text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-primary/30 flex items-center justify-center gap-2 transform active:scale-95 cursor-pointer"
+                >
+                  Check Availability
+                </button>
+              </form>
+            </div>
+
+            {/* RIGHT IMAGE */}
+            <div className="relative h-full min-h-[300px] md:min-h-auto">
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-transform hover:scale-105 duration-[2000ms]"
+                style={{
+                  backgroundImage:
+                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBBWohu6gQ_LTu4RvB2A3tGGhEaS_2F4EP6TgH4qKvDsePOaiCCrtzZx-6gu2f7L8TYGGlIVZljcW8HN7OGyFoVgBeMx3TZrR3I4upSStPxgUTCr8CJPhdG1l2iWo1AV6K3SWA3HH5ApUDQKfOUKjWUCWNO5K5nHiRvKXeZJiqSDQmnbKUa1450U9cRURTAl-ikm1C1t5S8RjNTgsKz9GXEEYFwjwV506jKZelCWkDdPKPzCvhaZnLb1qZPxmIjf91k20vxW_BWbys")',
+                }}
               />
 
-              <button className="h-14 rounded-xl bg-white dark:bg-dark-accent text-primary dark:text-black font-bold text-lg hover:bg-surface-light dark:hover:bg-teal-400 transition-all">
-                Check Availability
-              </button>
+              <div className="absolute inset-0 bg-gradient-to-l from-background-dark to-transparent md:block hidden"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-background-dark to-transparent md:hidden block"></div>
+
+              <div className="absolute top-8 right-8 bg-white/10 backdrop-blur-md border border-white/20 text-white p-4 rounded-full w-24 h-24 flex flex-col items-center justify-center rotate-12 shadow-2xl animate-float">
+                <span className="text-2xl font-bold font-serif">20%</span>
+                <span className="text-[10px] uppercase tracking-wide text-center">
+                  Off First Booking
+                </span>
+              </div>
             </div>
           </div>
         </div>

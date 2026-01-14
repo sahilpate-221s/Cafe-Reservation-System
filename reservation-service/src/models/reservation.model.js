@@ -8,7 +8,8 @@ const reservationSchema = new mongoose.Schema(
       required: true,
     },
     userId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     date: {
@@ -18,6 +19,11 @@ const reservationSchema = new mongoose.Schema(
     timeSlot: {
       type: String, // e.g. "18:00-20:00"
       required: true,
+    },
+    guests: {
+      type: Number,
+      required: true,
+      min: 1,
     },
     status: {
       type: String,

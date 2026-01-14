@@ -16,6 +16,18 @@ app.use(morgan("dev"));
 
 connectDB();
 
+// Public menu route (no auth required)
+app.get("/api/menus", async (req, res) => {
+  try {
+    const Menu = require("./src/models/menu.model");
+    const menus = await Menu.find({ isAvailable: true }).sort({ displayOrder: 1 });
+    res.json(menus);
+  } catch (err) {
+    console.error("Fetch menus failed", err);
+    res.status(500).json({ message: "Failed to fetch menus" });
+  }
+});
+
 app.use("/api/tables", tableRoutes);
 app.use("/api/menus", menuRoutes);
 app.use("/api/reservations", reservationRoutes);

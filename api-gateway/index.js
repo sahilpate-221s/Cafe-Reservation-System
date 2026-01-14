@@ -39,13 +39,35 @@ app.use("/api/auth", async (req, res) => {
       method: req.method,
       url: `${AUTH_SERVICE}/api/auth${req.url}`,
       data: req.body,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": req.headers.authorization,
+      },
     });
     res.status(response.status).json(response.data);
   } catch (err) {
     res
       .status(err.response?.status || 500)
       .json(err.response?.data || { message: "Auth service error" });
+  }
+});
+
+/* =========================
+   PUBLIC MENU ROUTE
+   MUST COME BEFORE /api
+========================= */
+app.get("/api/menus", async (req, res) => {
+  try {
+    const response = await axios({
+      method: req.method,
+      url: `${RES_SERVICE}/api/menus`,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    res.status(response.status).json(response.data);
+  } catch (err) {
+    res.status(err.response?.status || 500).json(err.response?.data || { message: "Menu request failed" });
   }
 });
 
@@ -80,17 +102,19 @@ app.use(
 );
 
 /* =========================
-   ADMIN ROUTES
+   LOCK/UNLOCK ROUTES
+   MUST COME BEFORE /api
 ========================= */
 app.use(
-  ["/api/tables", "/api/menus", "/api/reservations/all"],
+  ["/api/reservations/lock", "/api/reservations/unlock"],
   verifyJWT,
-  allowRoles(["ADMIN"]),
+  allowRoles(["USER", "ADMIN"]),
   async (req, res) => {
     try {
+      const endpoint = req.originalUrl.includes('/lock') ? '/lock' : '/unlock';
       const response = await axios({
         method: req.method,
-        url: `${RES_SERVICE}/api${req.url}`,
+        url: `${RES_SERVICE}/api/reservations${endpoint}`,
         data: req.body,
         headers: {
           "Content-Type": "application/json",
@@ -98,14 +122,48 @@ app.use(
           "x-user-role": req.headers["x-user-role"],
         },
       });
+
       res.status(response.status).json(response.data);
     } catch (err) {
       res
         .status(err.response?.status || 500)
-        .json(err.response?.data || { message: "Admin request failed" });
+        .json(err.response?.data || { message: "Lock operation failed" });
     }
   }
 );
+
+/* =========================
+   ADMIN ROUTES
+========================= */
+const adminRoutes = ["/api/tables", "/api/menus", "/api/reservations/all"];
+
+adminRoutes.forEach((path) => {
+  app.use(
+    path,
+    verifyJWT,
+    allowRoles(["ADMIN"]),
+    async (req, res) => {
+      try {
+        // Use req.originalUrl to preserve the full path including /api prefix
+        const response = await axios({
+          method: req.method,
+          url: `${RES_SERVICE}${req.originalUrl}`,
+          data: req.body,
+          headers: {
+            "Content-Type": "application/json",
+            "x-user-id": req.headers["x-user-id"],
+            "x-user-role": req.headers["x-user-role"],
+          },
+        });
+        res.status(response.status).json(response.data);
+      } catch (err) {
+        res
+          .status(err.response?.status || 500)
+          .json(err.response?.data || { message: "Admin request failed" });
+      }
+    }
+  );
+});
 
 /* =========================
    USER + ADMIN (LAST)
@@ -116,9 +174,10 @@ app.use(
   allowRoles(["USER", "ADMIN"]),
   async (req, res) => {
     try {
+      // Use req.originalUrl to preserve the full path including /api prefix
       const response = await axios({
         method: req.method,
-        url: `${RES_SERVICE}/api${req.url}`,
+        url: `${RES_SERVICE}${req.originalUrl}`,
         data: req.body,
         headers: {
           "Content-Type": "application/json",

@@ -13,7 +13,17 @@ exports.createMenu = async (req, res) => {
   }
 
   try {
-    const menu = await Menu.create(req.body);
+    const menuData = {
+      name: req.body.name,
+      description: req.body.description,
+      price: req.body.price,
+      category: req.body.category,
+      isAvailable: req.body.available !== undefined ? req.body.available : true,
+      imageUrl: req.body.imageUrl,
+      isVeg: req.body.isVeg !== undefined ? req.body.isVeg : true,
+      displayOrder: req.body.displayOrder || 0,
+    };
+    const menu = await Menu.create(menuData);
     log(`Menu created: ${menu.name}`);
     res.status(201).json(menu);
   } catch (err) {
@@ -50,7 +60,17 @@ exports.updateMenu = async (req, res) => {
   }
 
   try {
-    const menu = await Menu.findByIdAndUpdate(id, req.body, { new: true });
+    const updateData = {};
+    if (req.body.name !== undefined) updateData.name = req.body.name;
+    if (req.body.description !== undefined) updateData.description = req.body.description;
+    if (req.body.price !== undefined) updateData.price = req.body.price;
+    if (req.body.category !== undefined) updateData.category = req.body.category;
+    if (req.body.available !== undefined) updateData.isAvailable = req.body.available;
+    if (req.body.imageUrl !== undefined) updateData.imageUrl = req.body.imageUrl;
+    if (req.body.isVeg !== undefined) updateData.isVeg = req.body.isVeg;
+    if (req.body.displayOrder !== undefined) updateData.displayOrder = req.body.displayOrder;
+
+    const menu = await Menu.findByIdAndUpdate(id, updateData, { new: true });
 
     if (!menu) {
       return res.status(404).json({ message: "Menu item not found" });

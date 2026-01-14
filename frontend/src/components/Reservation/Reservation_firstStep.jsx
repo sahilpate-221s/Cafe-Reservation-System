@@ -1,107 +1,594 @@
-import React from 'react'
+import React, { useState } from 'react';
+import { getAvailability } from '../../services/api';
 
-const Reservation_firstStep = () => {
+const ReserveTable = ({ onNext, reservationData }) => {
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(reservationData?.currentMonth ?? today.getMonth());
+  const [currentYear, setCurrentYear] = useState(reservationData?.currentYear ?? today.getFullYear());
+  const [selectedDate, setSelectedDate] = useState(reservationData?.selectedDate ?? today.getDate());
+  const [selectedTime, setSelectedTime] = useState(reservationData?.selectedTime ?? '6:30 PM');
+  const [selectedGuests, setSelectedGuests] = useState(reservationData?.selectedGuests ?? 2);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  const handlePrevMonth = () => {
+    if (currentMonth === 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else {
+      setCurrentMonth(currentMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (currentMonth === 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(currentMonth + 1);
+    }
+  };
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+  };
+
+  const handleTimeSelect = (time) => {
+    setSelectedTime(time);
+  };
+
+  const isTimeDisabled = (time) => {
+    const selectedDateObj = new Date(currentYear, currentMonth, selectedDate);
+    const today = new Date();
+    const isToday = selectedDateObj.toDateString() === today.toDateString();
+
+    if (!isToday) return false;
+
+    // Parse the time string (e.g., "6:30 PM" -> hours and minutes)
+    const timeMatch = time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!timeMatch) return false;
+
+    let hours = parseInt(timeMatch[1], 10);
+    const minutes = parseInt(timeMatch[2], 10);
+    const period = timeMatch[3].toUpperCase();
+
+    if (period === 'PM' && hours !== 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+
+    const selectedTimeObj = new Date();
+    selectedTimeObj.setHours(hours, minutes, 0, 0);
+
+    return selectedTimeObj < today;
+  };
+
+  const handleGuestsChange = (event) => {
+    const value = event.target.value;
+    // Allow empty string for clearing
+    if (value === '') {
+      setSelectedGuests('');
+      return;
+    }
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue > 0) {
+      setSelectedGuests(numValue);
+    }
+  };
+
+  const handleCheckAvailability = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Validate date is not in the past
+      const selectedDateObj = new Date(currentYear, currentMonth, selectedDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (selectedDateObj < today) {
+        setError('Please select a date in the future');
+        setLoading(false);
+        return;
+      }
+
+      // Validate guests
+      const guestCount = typeof selectedGuests === 'number' ? selectedGuests : parseInt(selectedGuests, 10);
+      if (!guestCount || guestCount < 1) {
+        setError('Please enter a valid number of guests');
+        setLoading(false);
+        return;
+      }
+
+      const date = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+      const params = {
+        date,
+        timeSlot: selectedTime,
+        guests: guestCount
+      };
+
+      const response = await getAvailability(params);
+      // Response is axios response object, data contains the array
+      const availableTables = response?.data || [];
+
+      if (availableTables.length === 0) {
+        setError('No tables available for the selected date and time. Please try a different time slot.');
+        setLoading(false);
+        return;
+      }
+
+      const nextData = {
+        currentMonth,
+        currentYear,
+        selectedDate,
+        selectedTime,
+        selectedGuests: guestCount,
+        availableTables
+      };
+
+      onNext(nextData);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to check availability. Please try again.';
+      setError(errorMessage);
+      console.error('Availability check failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <>
+    <main className="dark min-h-screen bg-black relative z-10 flex-grow flex flex-col items-center justify-start py-8 px-4 lg:px-8">
+      <div className="w-full max-w-5xl flex flex-col gap-6">
 
-        <div className="fixed inset-0 z-0 pointer-events-none">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#121418] via-[#0F1115] to-[#0a0c10] z-10 dark:block hidden"></div>
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#2D6A6A] rounded-full blur-[180px] opacity-10 z-10 dark:block hidden mix-blend-screen"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#5C7A7A] rounded-full blur-[150px] opacity-5 z-10 dark:block hidden mix-blend-screen"></div>
-
-      <div className="absolute inset-0 bg-[#F9F7F2] z-10 dark:hidden block"></div>
-      <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#E6DCCF] rounded-full blur-[120px] opacity-40 z-10 dark:hidden block mix-blend-multiply"></div>
-
-      <div
-        className="absolute inset-0 z-20 opacity-[0.03] dark:opacity-[0.05]"
-        style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C9286' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-        }}
-      ></div>
-    </div>
-
-    <header className="sticky top-0 z-50 w-full border-b border-white/50 dark:border-white/5 bg-[#F9F7F2]/80 dark:bg-[#0F1115]/70 backdrop-blur-xl transition-colors duration-300">
-      <div className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
-
-        <div className="flex items-center gap-3">
-          <div className="size-9 text-primary-light dark:text-primary-dark-accent">
-            {/* SVG LOGO — unchanged */}
-            <svg className="w-full h-full drop-shadow-sm" fill="none" viewBox="0 0 48 48">
-              <path d="M13.8261 17.4264C16.7203 18.1174 20.2244 18.5217 24 18.5217C27.7756 18.5217 31.2797 18.1174 34.1739 17.4264C36.9144 16.7722 39.9967 15.2331 41.3563 14.1648L24.8486 40.6391C24.4571 41.267 23.5429 41.267 23.1514 40.6391L6.64374 14.1648C8.00331 15.2331 11.0856 16.7722 13.8261 17.4264Z" fill="currentColor" />
-            </svg>
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4 px-2 pt-20">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-3xl md:text-4xl font-bold text-text-main dark:text-white tracking-tight">
+              Reserve Your Table
+            </h1>
+            <p className="text-text-muted dark:text-gray-400 text-sm font-medium">
+              Experience our cozy ambiance and exquisite flavors.
+            </p>
           </div>
-          <h2 className="text-text-light dark:text-text-dark text-2xl font-bold tracking-tight font-serif">
-            Lumière
-          </h2>
-        </div>
 
-        <div className="hidden md:flex items-center gap-10">
-          <a className="text-text-light/80 dark:text-text-dark-muted hover:text-primary-light dark:hover:text-primary-dark-accent text-sm font-medium uppercase">
-            Menu
-          </a>
-          <a className="text-primary-light dark:text-primary-dark-accent text-sm font-bold uppercase border-b-2 border-primary-light dark:border-primary-dark-accent pb-0.5">
-            Reservations
-          </a>
-          <a className="text-text-light/80 dark:text-text-dark-muted hover:text-primary-light dark:hover:text-primary-dark-accent text-sm font-medium uppercase">
-            Events
-          </a>
-          <a className="text-text-light/80 dark:text-text-dark-muted hover:text-primary-light dark:hover:text-primary-dark-accent text-sm font-medium uppercase">
-            Contact
-          </a>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button className="md:hidden text-text-light dark:text-text-dark">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <div
-            className="hidden md:block bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-white/30 dark:ring-white/10 shadow-lg"
-            style={{
-              backgroundImage:
-                'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDMB3UmKnsibIUHJpvG_yMPgeXhanWnE9MJd3097LN0VVMvs26PWCFnLjt_7xNiRAN9xAthF9BWmN4nlRQZG0g_ootSUfgKm56TZWu1Z6fOaGw0an4TLYfMv9y23d5RnfeB3si1vKzSjm5KEicLSlOLy2VZmOFjOog7Rza3BfLnnJI-ZlRx64SJ1da2iGj1QCBx2Dwzzg4MLMljIfOZQvED9FyvU0fEpsbbCjWwp6IYEWJTk6Scfte249niIIL6JVIuKbgKNMWwhVg")',
-            }}
-          ></div>
-        </div>
-
-      </div>
-    </header>
-
-     <main className="flex-1 relative z-20 flex flex-col items-center justify-center p-4 md:py-16">
-
-      <div className="glass-panel w-full max-w-[900px] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-fade-in-up">
-
-        {/* STEPPER */}
-        <div className="px-8 pt-8 pb-6 border-b border-gray-200/50 dark:border-white/5">
-          <div className="flex flex-col gap-4">
-            <div className="flex gap-6 justify-between items-end">
-              <p className="text-primary-light dark:text-primary-dark-accent text-xs font-bold uppercase tracking-[0.2em]">
-                Step 1 of 3
-              </p>
-              <p className="text-text-light-muted dark:text-text-dark-muted text-xs tracking-wider uppercase">
-                Next: Contact Details
-              </p>
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center justify-center size-6 rounded-full bg-primary dark:bg-accent-teal text-[#181511] dark:text-black text-xs font-bold">
+                1
+              </span>
+              <span className="text-primary dark:text-accent-teal">Date &amp; Time</span>
             </div>
-
-            <div className="h-1.5 w-full rounded-full bg-gray-200/50 dark:bg-white/5 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-primary-light to-[#D4B98C] dark:from-primary-dark-accent dark:to-[#4A7F7F] rounded-full transition-all duration-700"
-                style={{ width: "33%" }}
-              ></div>
+            <div className="w-8 h-[1px] bg-border dark:bg-gray-600"></div>
+            <div className="flex items-center gap-2 text-text-muted/60 dark:text-gray-500">
+              <span className="flex items-center justify-center size-6 rounded-full border border-current text-xs">
+                2
+              </span>
+              <span>Details</span>
+            </div>
+            <div className="w-8 h-[1px] bg-border dark:bg-gray-600"></div>
+            <div className="flex items-center gap-2 text-text-muted/60 dark:text-gray-500">
+              <span className="flex items-center justify-center size-6 rounded-full border border-current text-xs">
+                3
+              </span>
+              <span>Confirm</span>
             </div>
           </div>
         </div>
 
-        {/* CONTENT */}
-        {/* EVERYTHING BELOW IS UNCHANGED STRUCTURE */}
-        {/* Party size, calendar, time slots */}
-        {/* Already mechanically converted above — preserved */}
+        {/* Main Glass Panel */}
+        <div className="glass-panel dark:bg-gray-800/50 dark:backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden flex flex-col lg:flex-row min-h-[500px]">
 
+          {/* LEFT COLUMN */}
+          <div className="flex-1 p-6 lg:p-8 border-b lg:border-b-0 lg:border-r border-border dark:border-gray-600">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold flex items-center gap-2 text-text-main dark:text-white">
+                <span className="material-symbols-outlined text-primary dark:text-accent-teal">
+                  calendar_month
+                </span>
+                Select Date
+              </h3>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handlePrevMonth}
+                  className="size-8 flex items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-text-main dark:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    chevron_left
+                  </span>
+                </button>
+                <span className="font-medium text-sm self-center text-text-main dark:text-white">
+                  {monthNames[currentMonth]} {currentYear}
+                </span>
+                <button
+                  onClick={handleNextMonth}
+                  className="size-8 flex items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 text-text-main dark:text-white transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    chevron_right
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Calendar */}
+            <div className="grid grid-cols-7 gap-y-4 gap-x-2 text-center text-sm mb-4">
+              {["Su","Mo","Tu","We","Th","Fr","Sa"].map(day => (
+                <span
+                  key={day}
+                  className="text-text-muted dark:text-gray-400 font-medium text-xs uppercase tracking-wide py-2"
+                >
+                  {day}
+                </span>
+              ))}
+
+              {(() => {
+                const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                const today = new Date();
+                const isCurrentMonth = currentMonth === today.getMonth() && currentYear === today.getFullYear();
+                const todayDate = today.getDate();
+                
+                const calendarDays = [];
+                
+                // Empty cells for days before the first day of the month
+                for (let i = 0; i < firstDay; i++) {
+                  calendarDays.push(
+                    <button key={`empty-${i}`} className="size-10 rounded-full text-text-muted/30 dark:text-gray-600" disabled>
+                      {new Date(currentYear, currentMonth, -i).getDate()}
+                    </button>
+                  );
+                }
+                
+                // Days of the month
+                for (let d = 1; d <= daysInMonth; d++) {
+                  const dateObj = new Date(currentYear, currentMonth, d);
+                  const isPast = dateObj < today && (dateObj.getDate() !== todayDate || !isCurrentMonth);
+                  const isSelected = selectedDate === d;
+                  
+                  calendarDays.push(
+                    <button
+                      key={d}
+                      onClick={() => !isPast && handleDateSelect(d)}
+                      disabled={isPast}
+                      className={`size-10 rounded-full transition-colors ${
+                        isSelected
+                          ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/30 dark:shadow-accent-teal/30"
+                          : isPast
+                          ? "text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                          : "text-text-main dark:text-white hover:bg-primary/20 dark:hover:bg-accent-teal/20 hover:text-primary dark:hover:text-accent-teal"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  );
+                }
+                
+                return calendarDays;
+              })()}
+            </div>
+
+            {/* Party Size */}
+            <div className="mt-8">
+              <label className="block text-sm font-bold mb-3 flex items-center gap-2 text-text-main dark:text-white">
+                <span className="material-symbols-outlined text-primary dark:text-accent-teal">
+                  groups
+                </span>
+                Party Size
+              </label>
+
+              <input
+                type="number"
+                value={selectedGuests}
+                onChange={handleGuestsChange}
+                min="1"
+                className="w-full h-12 glass-input dark:bg-gray-700/50 dark:border-gray-600 rounded-lg px-4 text-text-main dark:text-white focus:ring-2 focus:ring-primary dark:focus:ring-accent-teal font-medium"
+                placeholder="Enter number of guests"
+              />
+            </div>
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="flex-1 p-6 lg:p-8 flex flex-col">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4 text-text-main dark:text-white">
+              <span className="material-symbols-outlined text-primary dark:text-accent-teal">
+                schedule
+              </span>
+              Select Time
+            </h3>
+
+            <div className="flex flex-col gap-6">
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted dark:text-gray-400 mb-3">
+                  Lunch
+                </h4>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  <button
+                    onClick={() => !isTimeDisabled('11:30 AM') && handleTimeSelect('11:30 AM')}
+                    disabled={isTimeDisabled('11:30 AM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '11:30 AM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('11:30 AM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    11:30 AM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('12:00 PM') && handleTimeSelect('12:00 PM')}
+                    disabled={isTimeDisabled('12:00 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '12:00 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('12:00 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    12:00 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('12:30 PM') && handleTimeSelect('12:30 PM')}
+                    disabled={isTimeDisabled('12:30 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '12:30 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('12:30 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    12:30 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('1:00 PM') && handleTimeSelect('1:00 PM')}
+                    disabled={isTimeDisabled('1:00 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '1:00 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('1:00 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    1:00 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('1:30 PM') && handleTimeSelect('1:30 PM')}
+                    disabled={isTimeDisabled('1:30 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '1:30 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('1:30 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    1:30 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('2:00 PM') && handleTimeSelect('2:00 PM')}
+                    disabled={isTimeDisabled('2:00 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '2:00 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('2:00 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    2:00 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('2:30 PM') && handleTimeSelect('2:30 PM')}
+                    disabled={isTimeDisabled('2:30 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '2:30 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('2:30 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    2:30 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('3:00 PM') && handleTimeSelect('3:00 PM')}
+                    disabled={isTimeDisabled('3:00 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '3:00 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('3:00 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    3:00 PM
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-text-muted dark:text-gray-400 mb-3">
+                  Dinner
+                </h4>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  <button
+                    onClick={() => !isTimeDisabled('5:30 PM') && handleTimeSelect('5:30 PM')}
+                    disabled={isTimeDisabled('5:30 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '5:30 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('5:30 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    5:30 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('6:00 PM') && handleTimeSelect('6:00 PM')}
+                    disabled={isTimeDisabled('6:00 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '6:00 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('6:00 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    6:00 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('6:30 PM') && handleTimeSelect('6:30 PM')}
+                    disabled={isTimeDisabled('6:30 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '6:30 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('6:30 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    6:30 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('7:00 PM') && handleTimeSelect('7:00 PM')}
+                    disabled={isTimeDisabled('7:00 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '7:00 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('7:00 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    7:00 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('7:30 PM') && handleTimeSelect('7:30 PM')}
+                    disabled={isTimeDisabled('7:30 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '7:30 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('7:30 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    7:30 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('8:00 PM') && handleTimeSelect('8:00 PM')}
+                    disabled={isTimeDisabled('8:00 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '8:00 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('8:00 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    8:00 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('8:30 PM') && handleTimeSelect('8:30 PM')}
+                    disabled={isTimeDisabled('8:30 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '8:30 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('8:30 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    8:30 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('9:00 PM') && handleTimeSelect('9:00 PM')}
+                    disabled={isTimeDisabled('9:00 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '9:00 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('9:00 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    9:00 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('9:30 PM') && handleTimeSelect('9:30 PM')}
+                    disabled={isTimeDisabled('9:30 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '9:30 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('9:30 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    9:30 PM
+                  </button>
+                  <button
+                    onClick={() => !isTimeDisabled('10:00 PM') && handleTimeSelect('10:00 PM')}
+                    disabled={isTimeDisabled('10:00 PM')}
+                    className={`py-2 px-1 rounded-lg transition-all text-sm font-medium ${
+                      selectedTime === '10:00 PM'
+                        ? "bg-primary dark:bg-accent-teal text-[#181511] dark:text-black font-bold shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 ring-2 ring-primary dark:ring-accent-teal ring-offset-2 ring-offset-background dark:ring-offset-gray-800"
+                        : isTimeDisabled('10:00 PM')
+                        ? "border border-border/30 dark:border-gray-600/30 text-text-muted/30 dark:text-gray-600 cursor-not-allowed"
+                        : "border border-border dark:border-gray-600 hover:border-primary dark:hover:border-accent-teal hover:text-primary dark:hover:text-accent-teal text-text-main dark:text-white"
+                    }`}
+                  >
+                    10:00 PM
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-auto pt-6 border-t border-border dark:border-gray-600">
+              <div className="flex justify-between items-center mb-6 text-sm">
+                <span className="text-text-muted dark:text-gray-400">Selected:</span>
+                <span className="font-bold text-text-main dark:text-white">
+                  {monthNames[currentMonth]} {selectedDate}, {selectedTime} • {selectedGuests || '?'} {selectedGuests === 1 ? 'Guest' : 'Guests'}
+                </span>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-red-600 dark:text-red-400 text-sm font-medium">{error}</p>
+                </div>
+              )}
+
+              <button
+                onClick={handleCheckAvailability}
+                disabled={loading || !selectedGuests || selectedGuests < 1}
+                className="w-full flex items-center justify-center gap-2 h-12 bg-primary dark:bg-accent-teal hover:bg-primary/90 dark:hover:bg-accent-teal/90 text-[#181511] dark:text-black text-base font-bold rounded-lg shadow-lg shadow-primary/20 dark:shadow-accent-teal/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading && (
+                  <div className="w-4 h-4 border-2 border-[#181511]/30 border-t-[#181511] rounded-full animate-spin"></div>
+                )}
+                {loading ? "Checking..." : "Check Availability"}
+                {!loading && (
+                  <span className="material-symbols-outlined text-lg">
+                    arrow_forward
+                  </span>
+                )}
+              </button>
+
+              <p className="text-center mt-4 text-xs text-text-muted dark:text-gray-400">
+                Next step: Guest Details &amp; Dietary preferences
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
+    </main>
+  );
+};
 
-    </main>      
-    </>
-  )
-}
-
-export default Reservation_firstStep
+export default ReserveTable;

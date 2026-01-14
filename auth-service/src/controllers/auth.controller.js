@@ -95,3 +95,122 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * UPDATE PROFILE
+ */
+exports.updateProfile = async (req, res) => {
+  try {
+    const { name, email, phone, preferences } = req.body;
+    const userId = req.user.userId;
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (phone !== undefined) updateData.phone = phone;
+    if (preferences !== undefined) updateData.preferences = preferences;
+
+    const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    log(`User profile updated: ${user.email}`);
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        preferences: user.preferences,
+      },
+    });
+  } catch (err) {
+    error("Update profile error", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * GET ME
+ */
+exports.getMe = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone || '',
+      preferences: user.preferences || {
+        notifications: true,
+        newsletter: false,
+        dietaryRestrictions: ''
+      }
+    });
+  } catch (err) {
+    error("Get me error", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * GET USER BY ID (for internal services)
+ */
+exports.getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, role } = req.user;
+
+    // Allow access if admin, requesting own data, or internal call
+    if (role !== "ADMIN" && userId !== id && req.headers['x-internal-call'] !== 'true') {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (err) {
+    error("Get user by ID error", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * DELETE PROFILE
+ */
+exports.deleteProfile = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    log(`User profile deleted: ${user.email}`);
+
+    res.json({ message: "Profile deleted successfully" });
+  } catch (err) {
+    error("Delete profile error", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

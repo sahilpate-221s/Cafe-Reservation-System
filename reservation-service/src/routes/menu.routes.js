@@ -9,7 +9,7 @@ const {
 } = require("../controllers/menu.controller");
 
 router.post("/", createMenu);        // ADMIN
-router.get("/", getMenus);           // USER + ADMIN
+router.get("/", getMenus);           // PUBLIC (for menu display)
 router.put("/:id", updateMenu);      // ADMIN
 router.delete("/:id", deleteMenu);   // ADMIN
 

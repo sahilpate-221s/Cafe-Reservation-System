@@ -22,6 +22,26 @@ const userSchema = new mongoose.Schema(
       select: false, // IMPORTANT
     },
 
+    phone: {
+      type: String,
+      trim: true,
+    },
+
+    preferences: {
+      notifications: {
+        type: Boolean,
+        default: true,
+      },
+      newsletter: {
+        type: Boolean,
+        default: false,
+      },
+      dietaryRestrictions: {
+        type: String,
+        trim: true,
+      },
+    },
+
     role: {
       type: String,
       enum: ["USER", "ADMIN"],
