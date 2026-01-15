@@ -6,10 +6,7 @@ const morgan = require("morgan");
 
 const { verifyJWT } = require("./middleware/auth");
 const { allowRoles } = require("./middleware/rbac");
-const {
-  loginRateLimiter,
-  bookingRateLimiter,
-} = require("./middleware/rateLimiter");
+const { bookingRateLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 
@@ -21,7 +18,7 @@ const AUTH_SERVICE = process.env.AUTH_SERVICE_URL;
 const RES_SERVICE = process.env.RESERVATION_SERVICE_URL;
 
 /* =========================
-   DEBUG (keep for now)
+   DEBUG
 ========================= */
 app.use((req, _, next) => {
   console.log("➡️ Incoming:", req.method, req.originalUrl);
@@ -31,21 +28,21 @@ app.use((req, _, next) => {
 /* =========================
    AUTH ROUTES (PUBLIC)
 ========================= */
-app.use("/api/auth/login", loginRateLimiter);
-
 app.use("/api/auth", async (req, res) => {
   try {
     const response = await axios({
       method: req.method,
-      url: `${AUTH_SERVICE}/api/auth${req.url}`,
+      url: `${AUTH_SERVICE}${req.originalUrl}`,
       data: req.body,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": req.headers.authorization,
+        Authorization: req.headers.authorization,
       },
     });
+
     res.status(response.status).json(response.data);
   } catch (err) {
+    console.error("Auth proxy error:", err.message);
     res
       .status(err.response?.status || 500)
       .json(err.response?.data || { message: "Auth service error" });
@@ -54,26 +51,20 @@ app.use("/api/auth", async (req, res) => {
 
 /* =========================
    PUBLIC MENU ROUTE
-   MUST COME BEFORE /api
 ========================= */
 app.get("/api/menus", async (req, res) => {
   try {
-    const response = await axios({
-      method: req.method,
-      url: `${RES_SERVICE}/api/menus`,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.get(`${RES_SERVICE}/api/menus`);
     res.status(response.status).json(response.data);
   } catch (err) {
-    res.status(err.response?.status || 500).json(err.response?.data || { message: "Menu request failed" });
+    res
+      .status(err.response?.status || 500)
+      .json(err.response?.data || { message: "Menu request failed" });
   }
 });
 
 /* =========================
-   BOOKING ROUTE (VERY IMPORTANT)
-   MUST COME BEFORE /api
+   BOOKING ROUTE
 ========================= */
 app.use(
   "/api/reservations/book",
@@ -102,8 +93,7 @@ app.use(
 );
 
 /* =========================
-   LOCK/UNLOCK ROUTES
-   MUST COME BEFORE /api
+   LOCK / UNLOCK
 ========================= */
 app.use(
   ["/api/reservations/lock", "/api/reservations/unlock"],
@@ -111,7 +101,8 @@ app.use(
   allowRoles(["USER", "ADMIN"]),
   async (req, res) => {
     try {
-      const endpoint = req.originalUrl.includes('/lock') ? '/lock' : '/unlock';
+      const endpoint = req.originalUrl.includes("/lock") ? "/lock" : "/unlock";
+
       const response = await axios({
         method: req.method,
         url: `${RES_SERVICE}/api/reservations${endpoint}`,
@@ -138,43 +129,8 @@ app.use(
 const adminRoutes = ["/api/tables", "/api/menus", "/api/reservations/all"];
 
 adminRoutes.forEach((path) => {
-  app.use(
-    path,
-    verifyJWT,
-    allowRoles(["ADMIN"]),
-    async (req, res) => {
-      try {
-        // Use req.originalUrl to preserve the full path including /api prefix
-        const response = await axios({
-          method: req.method,
-          url: `${RES_SERVICE}${req.originalUrl}`,
-          data: req.body,
-          headers: {
-            "Content-Type": "application/json",
-            "x-user-id": req.headers["x-user-id"],
-            "x-user-role": req.headers["x-user-role"],
-          },
-        });
-        res.status(response.status).json(response.data);
-      } catch (err) {
-        res
-          .status(err.response?.status || 500)
-          .json(err.response?.data || { message: "Admin request failed" });
-      }
-    }
-  );
-});
-
-/* =========================
-   USER + ADMIN (LAST)
-========================= */
-app.use(
-  "/api",
-  verifyJWT,
-  allowRoles(["USER", "ADMIN"]),
-  async (req, res) => {
+  app.use(path, verifyJWT, allowRoles(["ADMIN"]), async (req, res) => {
     try {
-      // Use req.originalUrl to preserve the full path including /api prefix
       const response = await axios({
         method: req.method,
         url: `${RES_SERVICE}${req.originalUrl}`,
@@ -185,14 +141,39 @@ app.use(
           "x-user-role": req.headers["x-user-role"],
         },
       });
+
       res.status(response.status).json(response.data);
     } catch (err) {
       res
         .status(err.response?.status || 500)
-        .json(err.response?.data || { message: "Request failed" });
+        .json(err.response?.data || { message: "Admin request failed" });
     }
+  });
+});
+
+/* =========================
+   USER + ADMIN (LAST)
+========================= */
+app.use("/api", verifyJWT, allowRoles(["USER", "ADMIN"]), async (req, res) => {
+  try {
+    const response = await axios({
+      method: req.method,
+      url: `${RES_SERVICE}${req.originalUrl}`,
+      data: req.body,
+      headers: {
+        "Content-Type": "application/json",
+        "x-user-id": req.headers["x-user-id"],
+        "x-user-role": req.headers["x-user-role"],
+      },
+    });
+
+    res.status(response.status).json(response.data);
+  } catch (err) {
+    res
+      .status(err.response?.status || 500)
+      .json(err.response?.data || { message: "Request failed" });
   }
-);
+});
 
 /* =========================
    HEALTH
@@ -205,4 +186,3 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () =>
   console.log(`[API-GATEWAY] running on port ${PORT}`)
 );
-
