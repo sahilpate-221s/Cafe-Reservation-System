@@ -17,6 +17,11 @@ app.use(morgan("dev"));
 const AUTH_SERVICE = process.env.AUTH_SERVICE_URL;
 const RES_SERVICE = process.env.RESERVATION_SERVICE_URL;
 
+// Log environment on startup
+console.log("🔧 CONFIG CHECK:");
+console.log("AUTH_SERVICE_URL:", AUTH_SERVICE || "❌ NOT SET");
+console.log("RESERVATION_SERVICE_URL:", RES_SERVICE || "❌ NOT SET");
+
 /* =========================
    DEBUG
 ========================= */
@@ -30,22 +35,37 @@ app.use((req, _, next) => {
 ========================= */
 app.use("/api/auth", async (req, res) => {
   try {
+    const targetUrl = `${AUTH_SERVICE}${req.originalUrl}`;
+    console.log("🔗 Proxying to:", targetUrl);
+    
     const response = await axios({
       method: req.method,
-      url: `${AUTH_SERVICE}${req.originalUrl}`,
+      url: targetUrl,
       data: req.body,
       headers: {
         "Content-Type": "application/json",
         Authorization: req.headers.authorization,
       },
+      timeout: 10000,
     });
 
     res.status(response.status).json(response.data);
   } catch (err) {
-    console.error("Auth proxy error:", err.message);
+    console.error("❌ Auth proxy error:");
+    console.error("Message:", err.message);
+    console.error("Request URL:", `${AUTH_SERVICE}${req.originalUrl}`);
+    
+    if (err.response) {
+      console.error("Response Status:", err.response.status);
+      console.error("Response Data:", err.response.data);
+    } else if (err.request) {
+      console.error("No response received. Check if auth-service is running.");
+      console.error("Auth Service URL:", AUTH_SERVICE);
+    }
+    
     res
-      .status(err.response?.status || 500)
-      .json(err.response?.data || { message: "Auth service error" });
+      .status(err.response?.status || 502)
+      .json(err.response?.data || { message: "Auth service unavailable" });
   }
 });
 
