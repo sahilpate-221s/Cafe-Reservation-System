@@ -201,6 +201,8 @@ app.get("/health", (_, res) => {
   res.json({ service: "API-GATEWAY", status: "OK" });
 });
 
-app.listen(4000, () =>
-  console.log("[API-GATEWAY] running on port 4000")
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () =>
+  console.log(`[API-GATEWAY] running on port ${PORT}`)
 );
+
