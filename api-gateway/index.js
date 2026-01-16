@@ -10,23 +10,35 @@ const { bookingRateLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 
+/* =========================
+   MIDDLEWARE
+========================= */
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
+/* =========================
+   ENV CONFIG
+========================= */
 const AUTH_SERVICE = process.env.AUTH_SERVICE_URL;
 const RES_SERVICE = process.env.RESERVATION_SERVICE_URL;
 
-// Log environment on startup
 console.log("🔧 CONFIG CHECK:");
 console.log("AUTH_SERVICE_URL:", AUTH_SERVICE || "❌ NOT SET");
 console.log("RESERVATION_SERVICE_URL:", RES_SERVICE || "❌ NOT SET");
 
+if (!AUTH_SERVICE || !RES_SERVICE) {
+  console.error("❌ CRITICAL: One or more service URLs missing");
+}
+
 /* =========================
-   DEBUG
+   GLOBAL REQUEST LOGGER
 ========================= */
-app.use((req, _, next) => {
-  console.log("➡️ Incoming:", req.method, req.originalUrl);
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  console.log(
+    `🕒 [${req.requestTime}] ${req.method} ${req.originalUrl}`
+  );
   next();
 });
 
@@ -34,10 +46,16 @@ app.use((req, _, next) => {
    AUTH ROUTES (PUBLIC)
 ========================= */
 app.use("/api/auth", async (req, res) => {
+  const targetUrl = `${AUTH_SERVICE}${req.originalUrl}`;
+
+  console.log("🟡 AUTH PROXY START");
+  console.log("➡️ Incoming:", req.method, req.originalUrl);
+  console.log("🔗 Forwarding to:", targetUrl);
+  console.log("📦 Body:", req.body);
+
   try {
-    const targetUrl = `${AUTH_SERVICE}${req.originalUrl}`;
-    console.log("🔗 Proxying to:", targetUrl);
-    
+    const start = Date.now();
+
     const response = await axios({
       method: req.method,
       url: targetUrl,
@@ -49,23 +67,38 @@ app.use("/api/auth", async (req, res) => {
       timeout: 10000,
     });
 
+    console.log(
+      `✅ AUTH RESPONSE (${Date.now() - start}ms):`,
+      response.status
+    );
+
     res.status(response.status).json(response.data);
+
   } catch (err) {
-    console.error("❌ Auth proxy error:");
-    console.error("Message:", err.message);
-    console.error("Request URL:", `${AUTH_SERVICE}${req.originalUrl}`);
-    
-    if (err.response) {
-      console.error("Response Status:", err.response.status);
-      console.error("Response Data:", err.response.data);
-    } else if (err.request) {
-      console.error("No response received. Check if auth-service is running.");
-      console.error("Auth Service URL:", AUTH_SERVICE);
+    console.error("🔴 AUTH PROXY FAILED");
+    console.error("⏱ Time:", req.requestTime);
+    console.error("📍 Target URL:", targetUrl);
+
+    if (err.code) {
+      console.error("Axios Error Code:", err.code);
     }
-    
+
+    if (err.response) {
+      console.error("📥 Response Status:", err.response.status);
+      console.error("📥 Response Data:", err.response.data);
+    } else if (err.request) {
+      console.error("📡 No response received from Auth Service");
+      console.error("🚨 POSSIBLE CAUSES:");
+      console.error("- Render free-tier sleep (cold start)");
+      console.error("- Auth service crashed");
+      console.error("- Wrong AUTH_SERVICE_URL");
+    } else {
+      console.error("❌ Axios config error:", err.message);
+    }
+
     res
       .status(err.response?.status || 502)
-      .json(err.response?.data || { message: "Auth service unavailable" });
+      .json({ message: "Auth service unavailable" });
   }
 });
 
@@ -73,13 +106,24 @@ app.use("/api/auth", async (req, res) => {
    PUBLIC MENU ROUTE
 ========================= */
 app.get("/api/menus", async (req, res) => {
+  console.log("🟡 MENU REQUEST →", `${RES_SERVICE}/api/menus`);
+
   try {
     const response = await axios.get(`${RES_SERVICE}/api/menus`);
+    console.log("✅ MENU RESPONSE:", response.status);
     res.status(response.status).json(response.data);
   } catch (err) {
+    console.error("🔴 MENU FAILED");
+
+    if (err.response) {
+      console.error("Status:", err.response.status);
+    } else {
+      console.error("No response from Reservation Service");
+    }
+
     res
       .status(err.response?.status || 500)
-      .json(err.response?.data || { message: "Menu request failed" });
+      .json({ message: "Menu request failed" });
   }
 });
 
@@ -91,6 +135,8 @@ app.use(
   verifyJWT,
   bookingRateLimiter,
   async (req, res) => {
+    console.log("🟡 BOOKING REQUEST");
+
     try {
       const response = await axios({
         method: req.method,
@@ -103,11 +149,14 @@ app.use(
         },
       });
 
+      console.log("✅ BOOKING RESPONSE:", response.status);
       res.status(response.status).json(response.data);
     } catch (err) {
+      console.error("🔴 BOOKING FAILED");
+
       res
         .status(err.response?.status || 500)
-        .json(err.response?.data || { message: "Booking failed" });
+        .json({ message: "Booking failed" });
     }
   }
 );
@@ -120,6 +169,8 @@ app.use(
   verifyJWT,
   allowRoles(["USER", "ADMIN"]),
   async (req, res) => {
+    console.log("🟡 LOCK/UNLOCK REQUEST");
+
     try {
       const endpoint = req.originalUrl.includes("/lock") ? "/lock" : "/unlock";
 
@@ -134,11 +185,14 @@ app.use(
         },
       });
 
+      console.log("✅ LOCK/UNLOCK RESPONSE:", response.status);
       res.status(response.status).json(response.data);
     } catch (err) {
+      console.error("🔴 LOCK/UNLOCK FAILED");
+
       res
         .status(err.response?.status || 500)
-        .json(err.response?.data || { message: "Lock operation failed" });
+        .json({ message: "Lock operation failed" });
     }
   }
 );
@@ -150,6 +204,8 @@ const adminRoutes = ["/api/tables", "/api/menus", "/api/reservations/all"];
 
 adminRoutes.forEach((path) => {
   app.use(path, verifyJWT, allowRoles(["ADMIN"]), async (req, res) => {
+    console.log("🟡 ADMIN REQUEST:", req.originalUrl);
+
     try {
       const response = await axios({
         method: req.method,
@@ -162,11 +218,14 @@ adminRoutes.forEach((path) => {
         },
       });
 
+      console.log("✅ ADMIN RESPONSE:", response.status);
       res.status(response.status).json(response.data);
     } catch (err) {
+      console.error("🔴 ADMIN FAILED");
+
       res
         .status(err.response?.status || 500)
-        .json(err.response?.data || { message: "Admin request failed" });
+        .json({ message: "Admin request failed" });
     }
   });
 });
@@ -175,6 +234,8 @@ adminRoutes.forEach((path) => {
    USER + ADMIN (LAST)
 ========================= */
 app.use("/api", verifyJWT, allowRoles(["USER", "ADMIN"]), async (req, res) => {
+  console.log("🟡 USER REQUEST:", req.originalUrl);
+
   try {
     const response = await axios({
       method: req.method,
@@ -187,11 +248,14 @@ app.use("/api", verifyJWT, allowRoles(["USER", "ADMIN"]), async (req, res) => {
       },
     });
 
+    console.log("✅ USER RESPONSE:", response.status);
     res.status(response.status).json(response.data);
   } catch (err) {
+    console.error("🔴 USER REQUEST FAILED");
+
     res
       .status(err.response?.status || 500)
-      .json(err.response?.data || { message: "Request failed" });
+      .json({ message: "Request failed" });
   }
 });
 
@@ -200,6 +264,17 @@ app.use("/api", verifyJWT, allowRoles(["USER", "ADMIN"]), async (req, res) => {
 ========================= */
 app.get("/health", (_, res) => {
   res.json({ service: "API-GATEWAY", status: "OK" });
+});
+
+/* =========================
+   CRASH SAFETY
+========================= */
+process.on("unhandledRejection", (reason) => {
+  console.error("🔥 UNHANDLED REJECTION:", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("🔥 UNCAUGHT EXCEPTION:", err);
 });
 
 const PORT = process.env.PORT || 4000;
