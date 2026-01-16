@@ -7,24 +7,35 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (loading) return;
+
     setError("");
     setLoading(true);
 
     try {
       const response = await login({ email, password });
-      localStorage.setItem("token", response.data.token);
-      window.dispatchEvent(new Event('authChange'));
+
+      // ✅ Store auth data
+      localStorage.setItem("token", response.token);
+      localStorage.setItem("user", JSON.stringify(response.user));
+
+      // 🔔 Notify app (navbar, guards, etc.)
+      window.dispatchEvent(new Event("authChange"));
+
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark font-display antialiased text-slate-900 dark:text-white selection:bg-primary selection:text-background-dark flex items-center justify-center p-2 pt-18 relative">

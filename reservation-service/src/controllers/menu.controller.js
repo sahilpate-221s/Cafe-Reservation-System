@@ -2,9 +2,9 @@ const Menu = require("../models/menu.model");
 const { getUserContext } = require("../middleware/auth.context");
 const { log, error } = require("../utils/logger");
 
-/**
- * ADMIN: Create Menu Item
- */
+/* =========================
+   ADMIN: CREATE MENU
+========================= */
 exports.createMenu = async (req, res) => {
   const { role } = getUserContext(req);
 
@@ -13,18 +13,19 @@ exports.createMenu = async (req, res) => {
   }
 
   try {
-    const menuData = {
+    const menu = await Menu.create({
       name: req.body.name,
       description: req.body.description,
       price: req.body.price,
       category: req.body.category,
-      isAvailable: req.body.available !== undefined ? req.body.available : true,
+      isAvailable:
+        req.body.available !== undefined ? req.body.available : true,
       imageUrl: req.body.imageUrl,
       isVeg: req.body.isVeg !== undefined ? req.body.isVeg : true,
       displayOrder: req.body.displayOrder || 0,
-    };
-    const menu = await Menu.create(menuData);
-    log(`Menu created: ${menu.name}`);
+    });
+
+    log(`Menu created | name=${menu.name}`);
     res.status(201).json(menu);
   } catch (err) {
     error("Create menu failed", err);
@@ -32,15 +33,19 @@ exports.createMenu = async (req, res) => {
   }
 };
 
-/**
- * USER + ADMIN: Get Menus
- */
+/* =========================
+   USER + ADMIN: GET MENUS
+========================= */
 exports.getMenus = async (req, res) => {
   const { role } = getUserContext(req);
 
   try {
     const filter = role === "ADMIN" ? {} : { isAvailable: true };
-    const menus = await Menu.find(filter).sort({ displayOrder: 1 });
+
+    const menus = await Menu.find(filter)
+      .sort({ displayOrder: 1 })
+      .lean(); // faster & read-only
+
     res.json(menus);
   } catch (err) {
     error("Fetch menus failed", err);
@@ -48,9 +53,9 @@ exports.getMenus = async (req, res) => {
   }
 };
 
-/**
- * ADMIN: Update Menu Item
- */
+/* =========================
+   ADMIN: UPDATE MENU
+========================= */
 exports.updateMenu = async (req, res) => {
   const { role } = getUserContext(req);
   const { id } = req.params;
@@ -61,22 +66,30 @@ exports.updateMenu = async (req, res) => {
 
   try {
     const updateData = {};
+
     if (req.body.name !== undefined) updateData.name = req.body.name;
-    if (req.body.description !== undefined) updateData.description = req.body.description;
+    if (req.body.description !== undefined)
+      updateData.description = req.body.description;
     if (req.body.price !== undefined) updateData.price = req.body.price;
     if (req.body.category !== undefined) updateData.category = req.body.category;
-    if (req.body.available !== undefined) updateData.isAvailable = req.body.available;
-    if (req.body.imageUrl !== undefined) updateData.imageUrl = req.body.imageUrl;
+    if (req.body.available !== undefined)
+      updateData.isAvailable = req.body.available;
+    if (req.body.imageUrl !== undefined)
+      updateData.imageUrl = req.body.imageUrl;
     if (req.body.isVeg !== undefined) updateData.isVeg = req.body.isVeg;
-    if (req.body.displayOrder !== undefined) updateData.displayOrder = req.body.displayOrder;
+    if (req.body.displayOrder !== undefined)
+      updateData.displayOrder = req.body.displayOrder;
 
-    const menu = await Menu.findByIdAndUpdate(id, updateData, { new: true });
+    const menu = await Menu.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!menu) {
       return res.status(404).json({ message: "Menu item not found" });
     }
 
-    log(`Menu updated: ${menu.name}`);
+    log(`Menu updated | id=${id}`);
     res.json(menu);
   } catch (err) {
     error("Update menu failed", err);
@@ -84,9 +97,9 @@ exports.updateMenu = async (req, res) => {
   }
 };
 
-/**
- * ADMIN: Delete Menu Item
- */
+/* =========================
+   ADMIN: DELETE MENU
+========================= */
 exports.deleteMenu = async (req, res) => {
   const { role } = getUserContext(req);
   const { id } = req.params;
@@ -102,7 +115,7 @@ exports.deleteMenu = async (req, res) => {
       return res.status(404).json({ message: "Menu item not found" });
     }
 
-    log(`Menu deleted: ${menu.name}`);
+    log(`Menu deleted | id=${id}`);
     res.json({ message: "Menu item deleted successfully" });
   } catch (err) {
     error("Delete menu failed", err);

@@ -5,7 +5,7 @@ const { log, error } = require("../utils/logger");
 
 /**
  * GET AVAILABLE TABLES
- * Query params: date, timeSlot
+ * Query params: date, timeSlot, guests (optional)
  */
 exports.getAvailability = async (req, res) => {
   const { date, timeSlot, guests } = req.query;
@@ -16,57 +16,76 @@ exports.getAvailability = async (req, res) => {
     });
   }
 
-  try {
-    // 1️⃣ Fetch all tables
-    const tables = await Table.find();
+  const guestCount = guests ? parseInt(guests, 10) : null;
 
-    // 2️⃣ Fetch confirmed reservations for slot
+  try {
+    /* =========================
+       1️⃣ FETCH TABLES (OPTIMIZED)
+    ========================= */
+    const tableQuery = {};
+    if (guestCount && !isNaN(guestCount) && guestCount > 0) {
+      tableQuery.capacity = { $gte: guestCount };
+    }
+
+    const tables = await Table.find(tableQuery)
+      .select("_id name capacity")
+      .lean();
+
+    if (tables.length === 0) {
+      return res.json([]);
+    }
+
+    const tableIds = tables.map((t) => t._id);
+
+    /* =========================
+       2️⃣ FETCH CONFIRMED RESERVATIONS
+    ========================= */
     const reservations = await Reservation.find({
+      tableId: { $in: tableIds },
       date,
       timeSlot,
       status: "CONFIRMED",
     }).select("tableId");
 
-    const reservedTableIds = reservations.map((r) =>
-      r.tableId.toString()
+    const reservedSet = new Set(
+      reservations.map((r) => r.tableId.toString())
     );
 
-    // 3️⃣ Check Redis locks
-    const lockedTableIds = [];
+    /* =========================
+       3️⃣ CHECK REDIS LOCKS (BATCHED)
+    ========================= */
+    const lockKeys = tableIds.map(
+      (id) => `lock:${id}:${date}:${timeSlot}`
+    );
 
-    for (const table of tables) {
-      const lockKey = `lock:${table._id}:${date}:${timeSlot}`;
-      const isLocked = await redis.exists(lockKey);
-      if (isLocked) {
-        lockedTableIds.push(table._id.toString());
+    const lockResults = await redis.mget(lockKeys);
+
+    const lockedSet = new Set();
+    lockResults.forEach((value, index) => {
+      if (value) {
+        lockedSet.add(tableIds[index].toString());
       }
-    }
+    });
 
-    // 4️⃣ Filter available tables (not reserved and not locked)
-    let availableTables = tables.filter(
+    /* =========================
+       4️⃣ FILTER AVAILABLE TABLES
+    ========================= */
+    const availableTables = tables.filter(
       (table) =>
-        !reservedTableIds.includes(table._id.toString()) &&
-        !lockedTableIds.includes(table._id.toString())
+        !reservedSet.has(table._id.toString()) &&
+        !lockedSet.has(table._id.toString())
     );
 
-    // 5️⃣ Filter by capacity if guests parameter is provided
-    if (guests) {
-      const guestCount = parseInt(guests, 10);
-      if (!isNaN(guestCount) && guestCount > 0) {
-        availableTables = availableTables.filter(
-          (table) => table.capacity >= guestCount
-        );
-      }
-    }
-
-    // Add id field for frontend compatibility
-    const formattedTables = availableTables.map(table => ({
-      ...table.toObject(),
-      id: table._id.toString()
+    /* =========================
+       5️⃣ FORMAT RESPONSE
+    ========================= */
+    const formattedTables = availableTables.map((table) => ({
+      ...table,
+      id: table._id.toString(),
     }));
 
     log(
-      `Availability check for ${date} ${timeSlot}: ${formattedTables.length} tables free`
+      `Availability ${date} ${timeSlot}: ${formattedTables.length} tables available`
     );
 
     res.json(formattedTables);

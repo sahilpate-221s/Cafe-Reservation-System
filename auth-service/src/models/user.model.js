@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      index: true, // useful for admin/user listing
     },
 
     email: {
@@ -13,18 +14,20 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
-      index: true,
+      trim: true,
+      index: true, // critical for login
     },
 
     password: {
       type: String,
       required: true,
-      select: false, // IMPORTANT
+      select: false, // never returned by default
     },
 
     phone: {
       type: String,
       trim: true,
+      index: true, // optional but useful
     },
 
     preferences: {
@@ -46,15 +49,29 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["USER", "ADMIN"],
       default: "USER",
+      index: true,
     },
 
     status: {
       type: String,
       enum: ["ACTIVE", "BLOCKED"],
       default: "ACTIVE",
+      index: true, // important for auth checks
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
+
+/* =========================
+   INDEXES (FINAL SAFETY)
+========================= */
+// Case-insensitive unique email
+userSchema.index(
+  { email: 1 },
+  { unique: true }
 );
 
 module.exports = mongoose.model("User", userSchema);

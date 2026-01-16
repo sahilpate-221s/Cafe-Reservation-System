@@ -3,20 +3,28 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user.model");
 const { log, error } = require("../utils/logger");
 
-/**
- * REGISTER
- */
+/* =========================
+   HELPERS
+========================= */
+const generateToken = (user) =>
+  jwt.sign(
+    {
+      userId: user._id.toString(),
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+
+/* =========================
+   REGISTER
+========================= */
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -29,7 +37,7 @@ exports.register = async (req, res) => {
       status: "ACTIVE",
     });
 
-    log(`User registered: ${user.email}`);
+    log(`User registered | email=${email}`);
 
     res.status(201).json({
       message: "User registered successfully",
@@ -40,14 +48,19 @@ exports.register = async (req, res) => {
       },
     });
   } catch (err) {
+    // Mongo unique index protection
+    if (err.code === 11000) {
+      return res.status(409).json({ message: "User already exists" });
+    }
+
     error("Register error", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-/**
- * LOGIN
- */
+/* =========================
+   LOGIN
+========================= */
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -70,16 +83,9 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign(
-      {
-        userId: user._id.toString(),
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const token = generateToken(user);
 
-    log(`User logged in: ${user.email}`);
+    log(`User logged in | email=${email}`);
 
     res.json({
       message: "Login successful",
@@ -96,13 +102,13 @@ exports.login = async (req, res) => {
   }
 };
 
-/**
- * UPDATE PROFILE
- */
+/* =========================
+   UPDATE PROFILE
+========================= */
 exports.updateProfile = async (req, res) => {
   try {
-    const { name, email, phone, preferences } = req.body;
     const userId = req.user.userId;
+    const { name, email, phone, preferences } = req.body;
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
@@ -110,12 +116,16 @@ exports.updateProfile = async (req, res) => {
     if (phone !== undefined) updateData.phone = phone;
     if (preferences !== undefined) updateData.preferences = preferences;
 
-    const user = await User.findByIdAndUpdate(userId, updateData, { new: true });
+    const user = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    log(`User profile updated: ${user.email}`);
+    log(`Profile updated | user=${user.email}`);
 
     res.json({
       message: "Profile updated successfully",
@@ -134,14 +144,14 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-/**
- * GET ME
- */
+/* =========================
+   GET ME
+========================= */
 exports.getMe = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).lean();
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -151,12 +161,12 @@ exports.getMe = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      phone: user.phone || '',
+      phone: user.phone || "",
       preferences: user.preferences || {
         notifications: true,
         newsletter: false,
-        dietaryRestrictions: ''
-      }
+        dietaryRestrictions: "",
+      },
     });
   } catch (err) {
     error("Get me error", err);
@@ -164,20 +174,21 @@ exports.getMe = async (req, res) => {
   }
 };
 
-/**
- * GET USER BY ID (for internal services)
- */
+/* =========================
+   GET USER BY ID (INTERNAL)
+========================= */
 exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
     const { userId, role } = req.user;
 
-    // Allow access if admin, requesting own data, or internal call
-    if (role !== "ADMIN" && userId !== id && req.headers['x-internal-call'] !== 'true') {
+    const isInternalCall = req.headers["x-internal-call"] === "true";
+
+    if (role !== "ADMIN" && userId !== id && !isInternalCall) {
       return res.status(403).json({ message: "Forbidden" });
     }
 
-    const user = await User.findById(id);
+    const user = await User.findById(id).lean();
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -194,9 +205,9 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-/**
- * DELETE PROFILE
- */
+/* =========================
+   DELETE PROFILE
+========================= */
 exports.deleteProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -206,7 +217,7 @@ exports.deleteProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    log(`User profile deleted: ${user.email}`);
+    log(`Profile deleted | user=${user.email}`);
 
     res.json({ message: "Profile deleted successfully" });
   } catch (err) {
