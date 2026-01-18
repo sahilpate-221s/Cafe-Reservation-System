@@ -65,35 +65,51 @@ async function safeRequest(config, retries = 1) {
 /* =========================
    SERVICE WARM-UP
 ========================= */
+// async function warmUpServices() {
+//   console.log("🔥 WARMING UP SERVICES");
+
+//   try {
+//     await http.get(`${AUTH_SERVICE}/health`);
+//     console.log("✅ Auth warmed");
+//   } catch {}
+
+//   try {
+//     await http.get(`${RES_SERVICE}/health`);
+//     console.log("✅ Reservation warmed");
+//   } catch {}
+// }
+
+
 async function warmUpServices() {
   console.log("🔥 WARMING UP SERVICES");
 
-  try {
-    await http.get(`${AUTH_SERVICE}/health`);
-    console.log("✅ Auth warmed");
-  } catch {}
-
-  try {
-    await http.get(`${RES_SERVICE}/health`);
-    console.log("✅ Reservation warmed");
-  } catch {}
+  for (let i = 0; i < 4; i++) {
+    try {
+      await http.get(`${AUTH_SERVICE}/health`);
+      await http.get(`${RES_SERVICE}/health`);
+      console.log("✅ Services warmed");
+      break;
+    } catch {
+      console.log("⏳ Services still waking up...");
+      await new Promise((r) => setTimeout(r, 15000)); // wait 15s
+    }
+  }
 }
-
 setTimeout(warmUpServices, 3000);
 /* =========================
    WAKE-UP ENDPOINT (PUBLIC)
    🔥 CRITICAL FOR RENDER
 ========================= */
 
-app.get("/api/wakeup", async (_, res) => {
-  // fire-and-forget (do NOT await)
-  axios.get(`${AUTH_SERVICE}/health`).catch(() => {});
-  axios.get(`${RES_SERVICE}/health`).catch(() => {});
+// app.get("/api/wakeup", async (_, res) => {
+//   // fire-and-forget (do NOT await)
+//   axios.get(`${AUTH_SERVICE}/health`).catch(() => {});
+//   axios.get(`${RES_SERVICE}/health`).catch(() => {});
 
-  res.json({
-    status: "Waking up backend services",
-  });
-});
+//   res.json({
+//     status: "Waking up backend services",
+//   });
+// });
 
 /* =========================
    AUTH (PUBLIC)

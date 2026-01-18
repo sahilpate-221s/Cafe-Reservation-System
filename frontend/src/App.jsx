@@ -19,7 +19,7 @@ import ManageMenu from "./components/Admin/ManageMenu";
 import AllReservations from "./components/Admin/AllReservations";
 import Settings from "./components/Admin/Settings";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import axios from "axios";
+// import axios from "axios";
 
 function ReservationWrapper() {
   const dispatch = useDispatch();
@@ -65,15 +65,15 @@ function App() {
     document.documentElement.classList.add("dark");
   }, []);
 
-   useEffect(() => {
-    const API_BASE_URL =
-      import.meta.env.VITE_API_BASE_URL ||
-      "https://cafe-reservation-api-gateway-main-entry.onrender.com";
+  //  useEffect(() => {
+  //   const API_BASE_URL =
+  //     import.meta.env.VITE_API_BASE_URL ||
+  //     "https://cafe-reservation-api-gateway-main-entry.onrender.com";
 
-    axios.get(`${API_BASE_URL}/api/wakeup`).catch(() => {});
+  //   axios.get(`${API_BASE_URL}/api/wakeup`).catch(() => {});
 
-    console.log("calling backend apis for the cold start ");
-  }, []);
+  //   console.log("calling backend apis for the cold start ");
+  // }, []);
 
 
   return (

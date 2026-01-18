@@ -7,32 +7,60 @@ const redis = require("../config/redis");
  * - Max attempts: 5
  * - Fail-open on Redis failure
  */
+// exports.loginRateLimiter = async (req, res, next) => {
+//   const ip = req.ip;
+//   const key = `rate:login:${ip}`;
+
+//   try {
+//     const count = await redis.incr(key);
+
+//     // First request → set TTL
+//     if (count === 1) {
+//       await redis.expire(key, 60);
+//     }
+
+//     if (count > 5) {
+//       console.warn("🚦 LOGIN RATE LIMIT HIT:", { ip, count });
+//       return res.status(429).json({
+//         message: "Too many login attempts. Try again later.",
+//       });
+//     }
+
+//     console.log("✅ LOGIN RATE OK:", { ip, count });
+//     next();
+//   } catch (err) {
+//     // Fail-open strategy (critical for availability)
+//     console.error("🔥 REDIS LOGIN RATE LIMIT ERROR:", err.message);
+//     console.warn("⚠️  Rate limiter bypassed (fail-open)");
+//     next();
+//   }
+// };
+
 exports.loginRateLimiter = async (req, res, next) => {
+  // ✅ SKIP internal service calls
+  if (req.headers["x-internal-call"] === "true") {
+    return next();
+  }
+
   const ip = req.ip;
   const key = `rate:login:${ip}`;
 
   try {
     const count = await redis.incr(key);
 
-    // First request → set TTL
     if (count === 1) {
       await redis.expire(key, 60);
     }
 
     if (count > 5) {
-      console.warn("🚦 LOGIN RATE LIMIT HIT:", { ip, count });
       return res.status(429).json({
         message: "Too many login attempts. Try again later.",
       });
     }
 
-    console.log("✅ LOGIN RATE OK:", { ip, count });
     next();
   } catch (err) {
-    // Fail-open strategy (critical for availability)
-    console.error("🔥 REDIS LOGIN RATE LIMIT ERROR:", err.message);
-    console.warn("⚠️  Rate limiter bypassed (fail-open)");
-    next();
+    next(); // fail-open
   }
 };
 
