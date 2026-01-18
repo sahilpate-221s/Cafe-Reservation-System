@@ -11,7 +11,10 @@ const ServerWarmingToast = ({ visible }) => {
           <p className="font-semibold mb-1">Server starting</p>
           <p className="text-stone-600 dark:text-stone-400">
             This app runs on a free server.
-            First request may take up to 1 minute.
+            First request may take up to 1 minute. <br />
+            and may be sometimes take a bit longer or fail. <br />
+                        Please be patient! <br />
+            Thanks for your understanding.
           </p>
         </div>
       </div>
