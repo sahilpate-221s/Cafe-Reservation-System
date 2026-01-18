@@ -55,7 +55,7 @@ const ManageMenu = () => {
     setMenusLoading(true);
     try {
       const res = await getMenus();
-      console.log('Fetched menus:', res);
+      // console.log('Fetched menus:', res);
       setMenus(res);
     } catch (err) {
       console.error(err);

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaCoffee, FaMoon, FaSun, FaBars, FaUser } from "react-icons/fa";
-import { getMe } from "../services/api";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -40,14 +39,24 @@ const Navbar = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      getMe()
-        .then((response) => {
-          setUserRole(response.data.role);
-        })
-        .catch((error) => {
-          console.error('Error fetching user data:', error);
+      const storedUser = localStorage.getItem('user');
+      // console.log('Navbar: Checking stored user data:', storedUser);
+      if (storedUser && storedUser !== 'undefined') {
+        try {
+          const user = JSON.parse(storedUser);
+          // console.log('Navbar: Parsed user data:', user);
+          setUserRole(user.role);
+        } catch (error) {
+          console.error('Navbar: Error parsing stored user data:', error);
           setUserRole(null);
-        });
+        }
+      } else {
+        console.log('Navbar: No stored user data found');
+        setUserRole(null);
+      }
+    } else {
+      console.log('Navbar: User not logged in');
+      setUserRole(null);
     }
   }, [isLoggedIn]);
 

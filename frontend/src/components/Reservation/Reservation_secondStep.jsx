@@ -211,7 +211,7 @@ const Reservation_secondStep = ({ reservationData, onBack, onNext }) => {
       onNext({
         ...reservationData,
         selectedTable: selectedTableData,
-        reservation: response.reservation || response,
+        reservation: response.data.reservation,
       });
     } catch (err) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to book reservation. Please try again.';

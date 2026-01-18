@@ -5,35 +5,45 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { getMe } from '../../services/api';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const location = useLocation();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setLoading(false);
-          return;
-        }
+    const verifyToken = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
 
-        const response = await getMe();
-        setUser(response.data);
+      if (!token || !storedUser) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        if (storedUser === 'undefined') {
+          throw new Error('User data is undefined');
+        }
+        const parsedUser = JSON.parse(storedUser);
+        // Verify token by calling getMe
+        await getMe();
+        setUser(parsedUser);
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('Token verification failed:', error);
+        // Token is invalid, clear storage
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
+    verifyToken();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen bg-black dark:bg-black flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );

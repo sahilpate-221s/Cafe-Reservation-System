@@ -20,16 +20,20 @@ const Login = () => {
 
     try {
       const response = await login({ email, password });
+      console.log('Login: Response received:', response);
 
       // ✅ Store auth data
-      localStorage.setItem("token", response.token);
-      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("user", JSON.stringify(response.data.user));
+      // console.log('Login: Stored token:', response.data.token);
+      // console.log('Login: Stored user:', response.data.user);
 
       // 🔔 Notify app (navbar, guards, etc.)
       window.dispatchEvent(new Event("authChange"));
 
       navigate("/");
     } catch (err) {
+      console.error('Login: Error during login:', err);
       setError(err.message || "Login failed");
     } finally {
       setLoading(false);

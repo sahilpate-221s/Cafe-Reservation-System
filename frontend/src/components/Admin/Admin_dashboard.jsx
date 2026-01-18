@@ -43,7 +43,7 @@ const DashboardMain = () => {
     setReservationsLoading(true);
     try {
       const response = await getAllReservations();
-      console.log(response);
+      // console.log(response);
       setReservations(response.data || response);
     } catch (error) {
       console.error('Failed to fetch reservations:', error);

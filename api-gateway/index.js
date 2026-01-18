@@ -80,6 +80,20 @@ async function warmUpServices() {
 }
 
 setTimeout(warmUpServices, 3000);
+/* =========================
+   WAKE-UP ENDPOINT (PUBLIC)
+   🔥 CRITICAL FOR RENDER
+========================= */
+
+app.get("/api/wakeup", async (_, res) => {
+  // fire-and-forget (do NOT await)
+  axios.get(`${AUTH_SERVICE}/health`).catch(() => {});
+  axios.get(`${RES_SERVICE}/health`).catch(() => {});
+
+  res.json({
+    status: "Waking up backend services",
+  });
+});
 
 /* =========================
    AUTH (PUBLIC)
@@ -118,6 +132,23 @@ app.get("/api/menus", async (_, res) => {
     res.json(response.data);
   } catch {
     res.status(502).json({ message: "Menu service unavailable" });
+  }
+});
+
+/* =========================
+   PUBLIC AVAILABILITY (ONLY HERE)
+========================= */
+app.get("/api/availability", async (req, res) => {
+  try {
+    const response = await safeRequest({
+      method: "GET",
+      url: `${RES_SERVICE}/api/availability`,
+      params: req.query,
+    });
+
+    res.json(response.data);
+  } catch {
+    res.status(502).json({ message: "Availability service unavailable" });
   }
 });
 

@@ -28,7 +28,7 @@ exports.getAvailability = async (req, res) => {
     }
 
     const tables = await Table.find(tableQuery)
-      .select("_id name capacity")
+      .select("_id name capacity image location view")
       .lean();
 
     if (tables.length === 0) {
