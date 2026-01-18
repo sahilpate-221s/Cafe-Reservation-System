@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { setReservationStep, setReservationData } from './store/slices/reservationSlice';
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
@@ -19,12 +19,14 @@ import ManageMenu from "./components/Admin/ManageMenu";
 import AllReservations from "./components/Admin/AllReservations";
 import Settings from "./components/Admin/Settings";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-// import axios from "axios";
+import axios from "axios";
+import ServerWarmingToast from "./pages/ServerWarmingToast";
 
 function ReservationWrapper() {
   const dispatch = useDispatch();
   const location = useLocation();
   const { step, data } = useSelector(state => state.reservation);
+  
 
   useEffect(() => {
     // Reset to step 1 when navigating to reservation route
@@ -65,20 +67,40 @@ function App() {
     document.documentElement.classList.add("dark");
   }, []);
 
-  //  useEffect(() => {
-  //   const API_BASE_URL =
-  //     import.meta.env.VITE_API_BASE_URL ||
-  //     "https://cafe-reservation-api-gateway-main-entry.onrender.com";
 
-  //   axios.get(`${API_BASE_URL}/api/wakeup`).catch(() => {});
+const [showWarming, setShowWarming] = useState(true);
+useEffect(() => {
+  const GATEWAY_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    "https://cafe-reservation-api-gateway-main-entry.onrender.com";
 
-  //   console.log("calling backend apis for the cold start ");
-  // }, []);
+  const AUTH_URL = "https://auth-service-reservation-website.onrender.com";           // ← replace
+  const RES_URL = "https://reservation-service-caffe-website.onrender.com";    // ← replace
+
+  const urls = [
+    `${GATEWAY_URL}/health`,
+    `${AUTH_URL}/health`,
+    `${RES_URL}/health`,
+  ];
+
+  // fire-and-forget warming calls
+  urls.forEach((url) => {
+    fetch(url, {
+      method: "GET",
+      mode: "no-cors", // IMPORTANT: do not wait for response
+    }).catch(() => {});
+  });
+
+  // hide warming toast after short delay
+  setTimeout(() => setShowWarming(false), 3000);
+}, []);
+
 
 
   return (
     <Router>
       <Navbar />
+      <ServerWarmingToast visible={showWarming} />
       
         <Routes>
           <Route path="/" element={<Home />} />
